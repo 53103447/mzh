@@ -439,7 +439,7 @@
                   <el-input v-model="refundForm.electricNum"  placeholder="剩余电数" style="width: 212px" @blur="electricNumBlur"></el-input>
                 </el-form-item>
                 <el-form-item label="结余电费">
-                  {{isEmpty(refundForm.electricNum)?0:refundForm.electricNum * 1.4}}
+                  {{isEmpty(refundForm.electricNum)?0:this.numMul(refundForm.electricNum,1.4)}}
                 </el-form-item>
               </el-tab-pane>
             </el-tabs>
@@ -466,6 +466,11 @@
                 </el-form-item>
                 <el-form-item label="微信账号" v-if="refundForm.refundPayType==='1'">
                   <el-input v-model="refundForm.wechatNo"  placeholder="微信账号" style="width: 212px"></el-input>
+                </el-form-item>
+                <el-form-item label="结转房间" v-if="refundForm.refundPayType==='4'">
+                  <el-select v-model="refundForm.carryRoomId" filterable clearable placeholder="结转房间">
+                    <el-option v-for="item in room" :key="item.id" :label="item.roomNum" :value="item.id"></el-option>
+                  </el-select>
                 </el-form-item>
               </el-tab-pane>
             </el-tabs>
@@ -517,7 +522,8 @@
               <el-table-column prop="subject" label="科目"></el-table-column>
               <el-table-column prop="price" label="金额（元）"></el-table-column>
             </el-table>
-            <el-divider content-position="right"><h1>退款合计：{{}}11</h1></el-divider>
+            <el-divider content-position="right"><h1>退款合计：{{refundTotalFee}}</h1></el-divider>
+            <h1>退款合计：{{roomForm.totalFee}}</h1>
           </el-tab-pane>
         </el-tabs>
       </el-form>
@@ -559,12 +565,12 @@ export default {
       staffCheckInDate:[],
       enterResult:{'room':{},'contract':{},'customers':[]},
       payTypeMap:[{'key':'微信','value':'1'},{'key':'支付宝','value':'2'},{'key':'POS机','value':'3'}],
-      refendPayTypeMap:[{'key':'微信','value':'1'},{'key':'支付宝','value':'2'},{'key':'银行卡','value':'3'}],
+      refendPayTypeMap:[{'key':'微信','value':'1'},{'key':'支付宝','value':'2'},{'key':'银行卡','value':'3'},{'key':'转房结转','value':'4'}],
       payTypeSelect:{'1':"微信",'2':"支付宝",'3':"POS机"},
       rentStatusMap:{'0':'待交租','1':'已交租','2':'做废'},
       refendStatusMap:[{'key':'到期退租','value':'2'},{'key':'违约退租','value':'3'},{'key':'提前退租','value':'4'}],
       roomForm:{'contractMonthNum':1,cohabitant:[{'abc':1}],'totalFee':0},
-      refundForm:{'damageArr':[{'id':0}],'otherCost':[{'id':0}],'rentEnd':'','rentRefundDate':new Date(),'refundDetail':[]},
+      refundForm:{'damageArr':[{'id':0}],'otherCost':[{'id':0}],'rentEnd':'','rentRefundDate':new Date(),'refundDetail':[],'totalFee':0},
       reserveForm:{},
       pickerDisableOptions: {
         disabledDate(time) {
@@ -644,6 +650,15 @@ export default {
       // eslint-disable-next-line vue/no-side-effects-in-computed-properties
       this.roomForm.contractEnd = new Date(result)
       return result;
+    },
+    refundTotalFee:function(){
+      let totalFee = 0
+      for(const item of this.refundForm.refundDetail){
+        totalFee = parseFloat(totalFee) + parseFloat(item.price)
+      }
+      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+      this.refundForm.totalFee = totalFee
+      return totalFee
     }
   },
   filters: {
@@ -934,7 +949,8 @@ export default {
     },
     removeDamage(index){
       if(this.refundForm.damageArr.length==1){
-        this.refundForm.damageArr[index] = {'id':index}
+        this.refundForm.damageArr[index].damageName=''
+        this.refundForm.damageArr[index].damageMoney=''
         this.removeRefundDetailItem('damage',index)
         return;
       }
@@ -946,7 +962,8 @@ export default {
     },
     removeOtherCost(index){
       if(this.refundForm.otherCost.length==1){
-        this.refundForm.otherCost[index] = {'id':index}
+        this.refundForm.otherCost[index].otherName=''
+        this.refundForm.otherCost[index].otherMoney=''
         this.removeRefundDetailItem('other',index)
         return;
       }
@@ -980,15 +997,33 @@ export default {
       }
     },
     refundPayTypeChange(){
+      this.refundForm.alipayNo = ''
+      this.refundForm.wechatNo = ''
+      this.refundForm.bank = ''
+      this.refundForm.bankAddress = ''
+      this.refundForm.bankNo = ''
+      //删除换房费
+      if(this.refundForm.refundDetail.length>0){
+        let index = -1
+        for(let i=0;i<this.refundForm.refundDetail.length;i++){
+          let value = this.refundForm.refundDetail[i]
+          if(value.subject === '换房费'){
+            index = i
+            break;
+          }
+        }
+        if(index != -1) this.refundForm.refundDetail.splice(index,1);
+      }
+
       if(this.refundForm.refundPayType === '2'){
         this.refundForm.alipayNo = this.refundForm.customerMobile
-        this.refundForm.wechatNo = ''
       }else if(this.refundForm.refundPayType === '1'){
         this.refundForm.wechatNo = this.refundForm.customerMobile
-        this.refundForm.alipayNo = ''
-      }else{
-        this.refundForm.wechatNo = ''
-        this.refundForm.alipayNo = ''
+      }else if(this.refundForm.refundPayType === '4') {
+        this.searchParam.status = '1'
+        this.searchParam.roomNum = ''
+        this.queryRoomByStatus();
+        this.refundForm.refundDetail.push({'subject':'换房费','price':500})
       }
     },
     checkOutTypeChange(){
@@ -1026,9 +1061,8 @@ export default {
         }
         if(index != -1) this.refundForm.refundDetail.splice(index,1);
       }
-
       if(!this.isEmpty(this.refundForm.electricNum)) {
-        this.refundForm.refundDetail.push({'flag':false,'subject':'结余电费','price':this.refundForm.electricNum * 1.4})
+        this.refundForm.refundDetail.push({'flag':false,'subject':'结余电费','price':this.numMul(parseFloat(this.refundForm.electricNum),1.4)})
       }
     },
     costBlur(item,costType){
@@ -1089,6 +1123,12 @@ export default {
 
       let t2 = year2 + '-' + month2 + '-' + day2;
       return t2;
+    },
+    numMul(x,y){
+      const multipleNum = 100
+      x = x * multipleNum
+      y = y * multipleNum
+      return x*y/multipleNum/multipleNum
     }
   }
 }
