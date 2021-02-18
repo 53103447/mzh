@@ -258,14 +258,14 @@
     </el-dialog>
 
     <!-- 已入住 -->
-    <el-dialog :visible.sync="showEnter" :show-close="false" width="70%" top="10px">
+    <el-dialog :visible.sync="showEnter" :show-close="false" width="80%" top="10px">
       <div slot="title">
         <el-row type="flex" class="row-bg" justify="center" align="middle">
           <el-col :span="12">
             <h2>已入住</h2>
           </el-col>
           <el-col :span="12" :offset="16">
-            <el-button type="danger" @click="showEnter = false;showCheckOut=true">退 房</el-button>
+            <el-button type="danger" @click="checkOut(enterResult)">退 房</el-button>
             <el-button type="primary" @click="showEnter = false">关 闭</el-button>
           </el-col>
         </el-row>
@@ -311,10 +311,10 @@
         </el-row><br/>
         <el-row>
           <el-col :span="6">
-            房间原价：{{enterResult.contract.originalPrice}}元
+            房间价格：{{enterResult.contract.realPrice}}元
           </el-col>
           <el-col :span="6">
-            成交价格：{{enterResult.contract.realPrice}}元
+            押金：{{enterResult.contract.deposit}}元
           </el-col>
           <el-col :span="12">
             支付方式：{{payTypeSelect[enterResult.contract.payType]}}
@@ -383,7 +383,7 @@
 
 
     <!-- 退房 -->
-    <el-dialog :visible.sync="showCheckOut" width="80%" >
+    <el-dialog :visible.sync="showCheckOut" width="80%" :show-close="false" top="5px">
       <div slot="title">
         <el-row type="flex" class="row-bg" justify="center" align="middle">
           <el-col :span="12">
@@ -410,10 +410,10 @@
                   {{refundForm.contractEnd | formatDate}}
                 </el-form-item>
                 <el-form-item label="缴费开始日期">
-                  {{refundForm.contractEnd | formatDate}}
+                  {{refundForm.rentStart | formatDate}}
                 </el-form-item>
                 <el-form-item label="缴费结束日期">
-                  {{refundForm.contractEnd | formatDate}}
+                  {{refundForm.rentEnd | formatDate}}
                 </el-form-item>
               </el-tab-pane>
             </el-tabs>
@@ -421,22 +421,22 @@
           <el-col :span="6">
             <el-tabs value="first">
               <el-tab-pane label="退租信息" name="first">
-                <el-form-item label="退租类型">
-                  <el-select v-model="refundForm.checkOutType" clearable placeholder="退租类型">
+                <el-form-item label="退租类型" prop="checkOutType">
+                  <el-select v-model="refundForm.checkOutType" clearable placeholder="退租类型" @change="checkOutTypeChange">
                     <el-option v-for="item in refendStatusMap" :key="item.id" :label="item.key" :value="item.value"></el-option>
                   </el-select>
                 </el-form-item>
                 <el-form-item label="退租日期">
-                  {{ new Date() | formatDate}}
+                  {{ refundForm.rentRefundDate | formatDate}}
                 </el-form-item>
                 <el-form-item label="逾期天数">
-                  {{  }}1
+                  {{ refundForm.overdueDay }}
                 </el-form-item>
                 <el-form-item label="押金">
-                  {{}}123
+                  {{ refundForm.deposit }}
                 </el-form-item>
-                <el-form-item label="剩余电数">
-                  <el-input v-model="refundForm.electricNum"  placeholder="剩余电数" style="width: 217px"></el-input>
+                <el-form-item label="剩余电数" prop="electricNum">
+                  <el-input v-model="refundForm.electricNum"  placeholder="剩余电数" style="width: 212px" @blur="electricNumBlur"></el-input>
                 </el-form-item>
                 <el-form-item label="结余电费">
                   {{isEmpty(refundForm.electricNum)?0:refundForm.electricNum * 1.4}}
@@ -447,25 +447,25 @@
           <el-col :span="6">
             <el-tabs value="first">
               <el-tab-pane label="退费途径" name="first">
-                <el-form-item label="退款方式">
-                  <el-select v-model="refundForm.refundPayType" clearable placeholder="退款方式">
+                <el-form-item label="退款方式" prop="refundPayType">
+                  <el-select v-model="refundForm.refundPayType" clearable placeholder="退款方式" @change="refundPayTypeChange">
                     <el-option v-for="item in refendPayTypeMap" :key="item.id" :label="item.key" :value="item.value"></el-option>
                   </el-select>
                 </el-form-item>
                 <el-form-item label="银行" v-if="refundForm.refundPayType==='3'">
-                  <el-input v-model="refundForm.bank"  placeholder="银行" style="width: 217px"></el-input>
+                  <el-input v-model="refundForm.bank"  placeholder="银行" style="width: 212px"></el-input>
                 </el-form-item>
                 <el-form-item label="开户行" v-if="refundForm.refundPayType==='3'">
-                  <el-input v-model="refundForm.bankAddress"  placeholder="开户行" style="width: 217px"></el-input>
+                  <el-input v-model="refundForm.bankAddress"  placeholder="开户行" style="width: 212px"></el-input>
                 </el-form-item>
                 <el-form-item label="银行卡号" v-if="refundForm.refundPayType==='3'">
-                  <el-input v-model="refundForm.bankNo"  placeholder="银行卡号" style="width: 217px"></el-input>
+                  <el-input v-model="refundForm.bankNo"  placeholder="银行卡号" style="width: 212px"></el-input>
                 </el-form-item>
                 <el-form-item label="支付宝账号" v-if="refundForm.refundPayType==='2'">
-                  <el-input v-model="refundForm.alipayNo"  placeholder="支付宝账号" style="width: 217px"></el-input>
+                  <el-input v-model="refundForm.alipayNo"  placeholder="支付宝账号" style="width: 212px"></el-input>
                 </el-form-item>
                 <el-form-item label="微信账号" v-if="refundForm.refundPayType==='1'">
-                  <el-input v-model="refundForm.wechatNo"  placeholder="微信账号" style="width: 217px"></el-input>
+                  <el-input v-model="refundForm.wechatNo"  placeholder="微信账号" style="width: 212px"></el-input>
                 </el-form-item>
               </el-tab-pane>
             </el-tabs>
@@ -476,12 +476,12 @@
             <el-row v-for="(item,index) in refundForm.damageArr" :key="index">
               <el-col :span="6">
                 <el-form-item label="损坏名称">
-                  <el-input v-model="item.damageName"  placeholder="损坏内容" style="width: 217px"></el-input>
+                  <el-input v-model="item.damageName"  placeholder="损坏内容" style="width: 212px"></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="6">
                 <el-form-item label="金额">
-                  <el-input v-model="item.damageMoney"  placeholder="金额" style="width: 217px"></el-input>
+                  <el-input v-model="item.damageMoney"  placeholder="金额" style="width: 212px" @blur="costBlur(item,'damage')"></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="6" v-if="index+1 === refundForm.damageArr.length">
@@ -492,11 +492,30 @@
           </el-tab-pane>
         </el-tabs>
         <el-tabs value="first">
+          <el-tab-pane label="其他费用" name="first" >
+            <el-row v-for="(item,index) in refundForm.otherCost" :key="index">
+              <el-col :span="6">
+                <el-form-item label="费用名称">
+                  <el-input v-model="item.otherName"  placeholder="损坏内容" style="width: 212px"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="金额">
+                  <el-input v-model="item.otherMoney"  placeholder="金额" style="width: 212px" @blur="costBlur(item,'other')"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6" v-if="index+1 === refundForm.otherCost.length">
+                <el-button type="primary" icon="el-icon-plus" size="mini" circle @click="addOtherCost" style="margin-left: 5px"></el-button>
+                <el-button type="primary" icon="el-icon-minus" size="mini" circle @click="removeOtherCost(index)" style="margin-left: 5px"></el-button>
+              </el-col>
+            </el-row>
+          </el-tab-pane>
+        </el-tabs>
+        <el-tabs value="first">
           <el-tab-pane label="退费结算明细" name="first" >
-            <el-table :data="tableData" style="width: 100%">
-              <el-table-column prop="date" label="科目"></el-table-column>
-              <el-table-column prop="name" label="金额（元）"></el-table-column>
-              <el-table-column prop="address" label="总价"></el-table-column>
+            <el-table :data="refundForm.refundDetail" style="width: 100%">
+              <el-table-column prop="subject" label="科目"></el-table-column>
+              <el-table-column prop="price" label="金额（元）"></el-table-column>
             </el-table>
             <el-divider content-position="right"><h1>退款合计：{{}}11</h1></el-divider>
           </el-tab-pane>
@@ -545,7 +564,7 @@ export default {
       rentStatusMap:{'0':'待交租','1':'已交租','2':'做废'},
       refendStatusMap:[{'key':'到期退租','value':'2'},{'key':'违约退租','value':'3'},{'key':'提前退租','value':'4'}],
       roomForm:{'contractMonthNum':1,cohabitant:[{'abc':1}],'totalFee':0},
-      refundForm:{'damageArr':[{}]},
+      refundForm:{'damageArr':[{'id':0}],'otherCost':[{'id':0}],'rentEnd':'','rentRefundDate':new Date(),'refundDetail':[]},
       reserveForm:{},
       pickerDisableOptions: {
         disabledDate(time) {
@@ -609,6 +628,12 @@ export default {
         ],
         effectiveTime:[
           { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
+        ],
+        refundPayType: [
+          { required: true, message: '请选择退款方式', trigger: 'change' }
+        ],
+        checkOutType: [
+          { required: true, message: '请选择退租类型', trigger: 'change' }
         ]
       }
     }
@@ -717,6 +742,21 @@ export default {
         }
       },function(){
         console.log('by手机号预定信息');
+      });
+    },
+    queryRentEndDate(contractId,status){
+      this.$http.post(pixUrl+'/rent/queryRentByStatus',{'contractId':contractId,'status':status}).then(function(res){
+        const result = res.body;
+        if(result.ok){
+          const curRent = result.result[result.result.length-1]
+          this.refundForm.rentEnd = curRent.currentDate
+          const overdueDay = parseInt( (this.refundForm.rentRefundDate - this.refundForm.rentEnd) / 1000/60/60/24 );
+          this.refundForm.overdueDay =  overdueDay < 0 ? 0 : overdueDay
+          this.refundForm.noLiveDay = Math.abs(overdueDay)
+          this.refundForm.dayPrice = curRent.dayPrice
+        }
+      },function(){
+        console.error("查询交租信息报错");
       });
     },
     saveReserve(){
@@ -829,12 +869,27 @@ export default {
         },10)
       }
     },
+    checkOut(enterResult){
+      this.queryRentEndDate(enterResult.contract.id,'1');
+      this.showEnter = false;
+      this.refundForm.roomId = enterResult.room.id
+      this.refundForm.roomNum = enterResult.room.roomNum
+      this.refundForm.contractStart = enterResult.contract.contractStart
+      this.refundForm.contractEnd = enterResult.contract.contractEnd
+
+      this.refundForm.rentStart = enterResult.contract.contractStart
+      this.refundForm.customerMobile = enterResult.contract.customerMobile
+
+
+      this.refundForm.deposit = enterResult.contract.deposit
+
+      this.showCheckOut=true
+    },
     staffCheckInDataMethod(){
       let result = []
       for(const item in this.saleUser){
         result.push({key:this.saleUser[item].id,label:this.saleUser[item].userName})
       }
-      console.log(result)
       this.staffCheckInDate = result
     },
     tabChange(){
@@ -865,7 +920,7 @@ export default {
     deleteCohabitant(item){
       if(this.roomForm.cohabitant.length==1) return;
       let index = -1
-      for(let i=0;i++;i<this.roomForm.cohabitant.length){
+      for(let i=0;i<this.roomForm.cohabitant.length;i++){
         index = i
         let value = this.roomForm.cohabitant[i]
         if(item.id === value.id){
@@ -875,11 +930,28 @@ export default {
       this.roomForm.cohabitant.splice(index,1);
     },
     addDamage(){
-      this.refundForm.damageArr.push({});
+      this.refundForm.damageArr.push({'id':this.refundForm.damageArr.length});
     },
     removeDamage(index){
-      if(this.refundForm.damageArr.length==1) return;
+      if(this.refundForm.damageArr.length==1){
+        this.refundForm.damageArr[index] = {'id':index}
+        this.removeRefundDetailItem('damage',index)
+        return;
+      }
       this.refundForm.damageArr.splice(index,1);
+      this.removeRefundDetailItem('damage',index)
+    },
+    addOtherCost(){
+      this.refundForm.otherCost.push({'id':this.refundForm.otherCost.length});
+    },
+    removeOtherCost(index){
+      if(this.refundForm.otherCost.length==1){
+        this.refundForm.otherCost[index] = {'id':index}
+        this.removeRefundDetailItem('other',index)
+        return;
+      }
+      this.refundForm.otherCost.splice(index,1);
+      this.removeRefundDetailItem('other',index)
     },
     realPriceChange(){
       if(this.isEmpty(this.roomForm.realPrice)) return 0.00
@@ -906,6 +978,85 @@ export default {
       }else{
         this.rules.sharingCardNo=[];
       }
+    },
+    refundPayTypeChange(){
+      if(this.refundForm.refundPayType === '2'){
+        this.refundForm.alipayNo = this.refundForm.customerMobile
+        this.refundForm.wechatNo = ''
+      }else if(this.refundForm.refundPayType === '1'){
+        this.refundForm.wechatNo = this.refundForm.customerMobile
+        this.refundForm.alipayNo = ''
+      }else{
+        this.refundForm.wechatNo = ''
+        this.refundForm.alipayNo = ''
+      }
+    },
+    checkOutTypeChange(){
+      //删除租房类型退款数据
+      let index = -1
+      for(let i=0;i<this.refundForm.refundDetail.length;i++){
+        index = i
+        let value = this.refundForm.refundDetail[i]
+        if(value.flag){
+          index = 1
+          break
+        }
+      }
+      if(index == 1) this.refundForm.refundDetail.splice(0,1);
+
+      if(this.refundForm.checkOutType === '2'){
+        this.refundForm.refundDetail.unshift({'flag':true,'subject':'押金','price':this.refundForm.deposit})
+      }else if(this.refundForm.checkOutType === '3'){
+        this.refundForm.refundDetail.unshift({'flag':true,'subject':'违约押金','price':0})
+      }else if(this.refundForm.checkOutType === '4'){
+        const dayTotalFee = parseInt(this.refundForm.noLiveDay) * parseFloat(this.refundForm.dayPrice)
+        this.refundForm.refundDetail.unshift({'flag':true,'subject':'结余房租','price':dayTotalFee})
+      }
+
+    },
+    electricNumBlur(){
+      if(this.refundForm.refundDetail.length>0){
+        let index = -1
+        for(let i=0;i<this.refundForm.refundDetail.length;i++){
+          let value = this.refundForm.refundDetail[i]
+          if(value.subject === '结余电费'){
+            index = i
+            break;
+          }
+        }
+        if(index != -1) this.refundForm.refundDetail.splice(index,1);
+      }
+
+      if(!this.isEmpty(this.refundForm.electricNum)) {
+        this.refundForm.refundDetail.push({'flag':false,'subject':'结余电费','price':this.refundForm.electricNum * 1.4})
+      }
+    },
+    costBlur(item,costType){
+      if(costType === 'damage'){
+        const damageId = item.id
+        const damageName = item.damageName;
+        const damageMoney = item.damageMoney;
+        this.refundForm.refundDetail.push({'damageId':damageId,'subject':damageName,'price':-damageMoney})
+      }else if(costType === 'other'){
+        const otherId = item.id
+        const otherName = item.otherName;
+        const otherMoney = item.otherMoney;
+        this.refundForm.refundDetail.push({'otherId':otherId,'subject':otherName,'price':otherMoney})
+      }
+    },
+    removeRefundDetailItem(costType,id){
+      let index = -1
+      for(let i=0;i<this.refundForm.refundDetail.length;i++){
+        let value = this.refundForm.refundDetail[i]
+        if(costType === 'damage'&& value.damageId === id){
+            index = i
+            break
+        }else if(costType === 'other' && value.otherId === id){
+            index = i
+            break
+        }
+      }
+      if(index != -1) this.refundForm.refundDetail.splice(index,1);
     },
     isEmpty(obj){
       if(typeof obj == "undefined" || obj == null || obj == ""){
@@ -950,4 +1101,5 @@ export default {
     padding-left:20px;
   }
 </style>
+
 
