@@ -620,806 +620,806 @@
 </template>
 
 <script>
-    //this.$refs.ruleForm.validateField('checkPass');
-    const pixUrl = "http://localhost:8096"
-    export default {
-        name: 'HelloWorld',
-        created() {
-            this.queryRoomFloor();
-            this.queryRoomByFloor();
-            this.queryRoomStatus();
-            this.queryUserByStatus();
+  //this.$refs.ruleForm.validateField('checkPass');
+  const pixUrl = "http://localhost:8096"
+  export default {
+    name: 'HelloWorld',
+    created() {
+      this.queryRoomFloor();
+      this.queryRoomByFloor();
+      this.queryRoomStatus();
+      this.queryUserByStatus();
+    },
+    data: function () {
+      const checkCostMoney = (rule, value, callback) => {
+        if (typeof value == "undefined" || value == null || value == "") callback()
+        setTimeout(() => {
+          if (!Number.isInteger(value)) {
+            callback(new Error('请输入数字值'));
+          } else {
+            callback()
+          }
+        }, 10);
+      }
+      return {
+        activeName: "1",
+        roomFloor: [],
+        room: [],
+        vacantRoom: [],
+        roomStatusArr: [],
+        searchParam: {},
+        showVacant: false,
+        showCheckIn: false,
+        showReserve: false,
+        showEnter: false,
+        showStaff: false,
+        showCheckOut: false,
+        reserveMobile: '',
+        totalFee: 0,
+        saleUser: [],
+        checkInStaff: [],
+        reserve: {},
+        collapseItem: ['1'],
+        staffCheckIn: [],
+        staffCheckInDate: [],
+        enterResult: {'room': {}, 'contract': {}, 'customers': []},
+        payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {
+          'key': 'POS机',
+          'value': '3'
+        }, {'key': '现金', 'value': '4'}],
+        refendPayTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {
+          'key': '银行卡',
+          'value': '3'
+        }, {'key': '转房结转', 'value': '4'}],
+        payTypeSelect: {'1': "微信", '2': "支付宝", '3': "POS机", '4': '现金'},
+        rentStatusMap: {'0': '待交租', '1': '已交租', '2': '做废'},
+        refendStatusMap: [{'key': '到期退租', 'value': '2'}, {'key': '违约退租', 'value': '3'}, {
+          'key': '提前退租',
+          'value': '4'
+        }],
+        roomForm: {'contractMonthNum': 1, cohabitant: [{'abc': 1}], 'totalFee': 0},
+        refundForm: {
+          'damageArr': [{'id': 0}],
+          'otherCost': [{'id': 0}],
+          'rentEnd': '',
+          'rentRefundDate': new Date(),
+          'refundDetail': [],
+          'totalFee': 0,
+          'waterNum': 0
         },
-        data: function () {
-            const checkCostMoney = (rule, value, callback) => {
-                if (typeof value == "undefined" || value == null || value == "") callback()
-                setTimeout(() => {
-                    if (!Number.isInteger(value)) {
-                        callback(new Error('请输入数字值'));
-                    } else {
-                        callback()
-                    }
-                }, 10);
-            }
-            return {
-                activeName: "1",
-                roomFloor: [],
-                room: [],
-                vacantRoom: [],
-                roomStatusArr: [],
-                searchParam: {},
-                showVacant: false,
-                showCheckIn: false,
-                showReserve: false,
-                showEnter: false,
-                showStaff: false,
-                showCheckOut: false,
-                reserveMobile: '',
-                totalFee: 0,
-                saleUser: [],
-                checkInStaff: [],
-                reserve: {},
-                collapseItem: ['1'],
-                staffCheckIn: [],
-                staffCheckInDate: [],
-                enterResult: {'room': {}, 'contract': {}, 'customers': []},
-                payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {
-                    'key': 'POS机',
-                    'value': '3'
-                }, {'key': '现金', 'value': '4'}],
-                refendPayTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {
-                    'key': '银行卡',
-                    'value': '3'
-                }, {'key': '转房结转', 'value': '4'}],
-                payTypeSelect: {'1': "微信", '2': "支付宝", '3': "POS机", '4': '现金'},
-                rentStatusMap: {'0': '待交租', '1': '已交租', '2': '做废'},
-                refendStatusMap: [{'key': '到期退租', 'value': '2'}, {'key': '违约退租', 'value': '3'}, {
-                    'key': '提前退租',
-                    'value': '4'
-                }],
-                roomForm: {'contractMonthNum': 1, cohabitant: [{'abc': 1}], 'totalFee': 0},
-                refundForm: {
-                    'damageArr': [{'id': 0}],
-                    'otherCost': [{'id': 0}],
-                    'rentEnd': '',
-                    'rentRefundDate': new Date(),
-                    'refundDetail': [],
-                    'totalFee': 0,
-                    'waterNum': 0
-                },
-                refundFormBak: {
-                    'damageArr': [{'id': 0}],
-                    'otherCost': [{'id': 0}],
-                    'rentEnd': '',
-                    'rentRefundDate': new Date(),
-                    'refundDetail': [],
-                    'totalFee': 0,
-                    'waterNum': 0
-                },
-                reserveForm: {},
-                pickerDisableOptions: {
-                    disabledDate(time) {
-                        const tomorrow = Date.now()
-                        return time.getTime() < tomorrow;
-                    },
-                },
-                rules: {
-                    customerName: [
-                        {required: true, message: '请输入租房姓名', trigger: 'blur'},
-                    ],
-                    cardType: [
-                        {required: true, message: '请选择证件类型', trigger: 'change'}
-                    ],
-                    cardNo: [
-                        {required: true, message: '请输入证件号', trigger: 'blur'}
-                    ],
-                    sex: [
-                        {required: true, message: '请选择性别', trigger: 'change'},
-                    ],
-                    mobilePhone: [
-                        {required: true, message: '请输入手机号', trigger: 'blur'},
-                        {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'},
-                    ],
-                    sharingCardNo: [
-                        {
-                            pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
-                            message: '身份证号格式不正确',
-                            trigger: 'blur',
-                            flag: 'cardNoValid'
-                        }
-                    ],
-                    permanentAddress: [
-                        {required: true, message: '请输入户籍地址', trigger: 'blur'},
-                    ],
-                    urgentPeople: [
-                        {required: true, message: '请输入紧急联系人', trigger: 'blur'},
-                    ],
-                    urgentPhone: [
-                        {required: true, message: '请输入联系人手机号', trigger: 'blur'},
-                        {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'},
-                    ],
-                    realPrice: [
-                        {required: true, message: '请输入成交房价', trigger: 'blur'},
-                        {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
-                    ],
-                    payType: [
-                        {required: true, message: '请选择收款方式', trigger: 'change'}
-                    ],
-                    saleId: [
-                        {required: true, message: '请选择销售员', trigger: 'change'}
-                    ],
-                    contractStart: [
-                        {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
-                    ],
-                    cardEffective: [
-                        {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
-                    ],
-
-                    reserveMobile: [{required: true, message: '请输入预订手机号', trigger: 'blur'},
-                        {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'}
-                    ],
-                    reservePrice: [
-                        {required: true, message: '请输入预订金额', trigger: 'blur'},
-                        {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
-                    ],
-                    effectiveTime: [
-                        {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
-                    ],
-                    refundPayType: [
-                        {required: true, message: '请选择退款方式', trigger: 'change'}
-                    ],
-                    checkOutType: [
-                        {required: true, message: '请选择退租类型', trigger: 'change'}
-                    ],
-                    electricNum: [
-                        {required: true, message: '请输入结余电数', trigger: 'blur'},
-                        {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
-                    ],
-                    waterNum: [
-                        {required: true, message: '请输入水表吨数', trigger: 'blur'},
-                        {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
-                    ],
-                    useWaterNum: [
-                        {required: true, message: '请输入使用吨数', trigger: 'blur'},
-                        {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
-                    ]
-                },
-                costRules: {
-                    damageMoney: [
-                        {validator: checkCostMoney, trigger: 'blur'}
-                    ],
-                    otherMoney: [
-                        {validator: checkCostMoney, trigger: 'blur'}
-                    ]
-                }
-            }
+        refundFormBak: {
+          'damageArr': [{'id': 0}],
+          'otherCost': [{'id': 0}],
+          'rentEnd': '',
+          'rentRefundDate': new Date(),
+          'refundDetail': [],
+          'totalFee': 0,
+          'waterNum': 0
         },
-        computed: {
-            contractEnd: function () {
-                const result = this.getNextMonth(this.roomForm.contractStart, this.roomForm.contractMonthNum)
-                // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-                this.roomForm.contractEnd = new Date(result)
-                return result;
-            },
-            refundTotalFee: function () {
-                const mulNum = 10000;
-                let totalFee = 0
-                for (const item of this.refundForm.refundDetail) {
-                    const totalFeeMul = (parseFloat(totalFee) * mulNum) + (parseFloat(item.price) * mulNum)
-                    totalFee = totalFeeMul / mulNum
-                }
-                // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-                this.refundForm.totalFee = totalFee
-                return totalFee
-            }
+        reserveForm: {},
+        pickerDisableOptions: {
+          disabledDate(time) {
+            const tomorrow = Date.now()
+            return time.getTime() < tomorrow;
+          },
         },
-        filters: {
-            formatDate: function (value) {
-                if (typeof value == "undefined" || value == null || value == "") return ''
-                let date = new Date(value);
-                let y = date.getFullYear();
-                let MM = date.getMonth() + 1;
-                MM = MM < 10 ? "0" + MM : MM;
-                let d = date.getDate();
-                d = d < 10 ? "0" + d : d;
-                return y + "-" + MM + "-" + d;
-            },
-            formatTimer: function (value) {
-                if (typeof value == "undefined" || value == null || value == "") return ''
-                let date = new Date(value);
-                let y = date.getFullYear();
-                let MM = date.getMonth() + 1;
-                MM = MM < 10 ? "0" + MM : MM;
-                let d = date.getDate();
-                d = d < 10 ? "0" + d : d;
-                let h = date.getHours();
-                h = h < 10 ? "0" + h : h;
-                let m = date.getMinutes();
-                m = m < 10 ? "0" + m : m;
-                let s = date.getSeconds();
-                s = s < 10 ? "0" + s : s;
-                return y + "-" + MM + "-" + d + " " + h + ":" + m + ":" + s;
+        rules: {
+          customerName: [
+            {required: true, message: '请输入租房姓名', trigger: 'blur'},
+          ],
+          cardType: [
+            {required: true, message: '请选择证件类型', trigger: 'change'}
+          ],
+          cardNo: [
+            {required: true, message: '请输入证件号', trigger: 'blur'}
+          ],
+          sex: [
+            {required: true, message: '请选择性别', trigger: 'change'},
+          ],
+          mobilePhone: [
+            {required: true, message: '请输入手机号', trigger: 'blur'},
+            {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'},
+          ],
+          sharingCardNo: [
+            {
+              pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
+              message: '身份证号格式不正确',
+              trigger: 'blur',
+              flag: 'cardNoValid'
             }
+          ],
+          permanentAddress: [
+            {required: true, message: '请输入户籍地址', trigger: 'blur'},
+          ],
+          urgentPeople: [
+            {required: true, message: '请输入紧急联系人', trigger: 'blur'},
+          ],
+          urgentPhone: [
+            {required: true, message: '请输入联系人手机号', trigger: 'blur'},
+            {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'},
+          ],
+          realPrice: [
+            {required: true, message: '请输入成交房价', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
+          ],
+          payType: [
+            {required: true, message: '请选择收款方式', trigger: 'change'}
+          ],
+          saleId: [
+            {required: true, message: '请选择销售员', trigger: 'change'}
+          ],
+          contractStart: [
+            {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
+          ],
+          cardEffective: [
+            {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
+          ],
+
+          reserveMobile: [{required: true, message: '请输入预订手机号', trigger: 'blur'},
+            {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'}
+          ],
+          reservePrice: [
+            {required: true, message: '请输入预订金额', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
+          ],
+          effectiveTime: [
+            {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
+          ],
+          refundPayType: [
+            {required: true, message: '请选择退款方式', trigger: 'change'}
+          ],
+          checkOutType: [
+            {required: true, message: '请选择退租类型', trigger: 'change'}
+          ],
+          electricNum: [
+            {required: true, message: '请输入结余电数', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
+          ],
+          waterNum: [
+            {required: true, message: '请输入水表吨数', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
+          ],
+          useWaterNum: [
+            {required: true, message: '请输入使用吨数', trigger: 'blur'},
+            {type: 'number', message: '请输入数字', trigger: 'blur', transform: (value) => Number(value)},
+          ]
         },
-        methods: {
-            queryRoomFloor() {
-                this.$http.post(pixUrl + '/room/queryRoomFloor', {}).then(function (res) {
-                    this.roomFloor = res.body
-                }, function () {
-                    console.log('楼层请求失败！');
-                });
-            },
-            queryRoomByFloor() {
-                this.$http.post(pixUrl + '/room/queryRoomByFloor', {'floor': this.activeName}).then(function (res) {
-                    this.room = res.body
-                }, function () {
-                    console.log('楼层房间请求失败');
-                });
-            },
-            queryRoomStatus() {
-                this.$http.post(pixUrl + '/room/queryRoomStatus', {}).then(function (res) {
-                    this.roomStatusArr = res.body
-                }, function () {
-                    console.log('房间状态请求失败');
-                });
-            },
-            queryRoomByStatus() {
-                this.$http.post(pixUrl + '/room/queryRoomByStatus', this.searchParam).then(function (res) {
-                    const result = res.body;
-                    if (result.ok) {
-                        this.room = result.result
-                    }
-                }, function () {
-                    console.log('By房间状态请求失败');
-                });
-            },
-            queryVacantrRoom() {
-                this.$http.post(pixUrl + '/room/queryRoomByStatus', {'status': '1'}).then(function (res) {
-                    const result = res.body;
-                    if (result.ok) {
-                        this.vacantRoom = result.result
-                    }
-                }, function () {
-                    console.log('By房间状态请求失败');
-                });
-            },
-            queryUserByStatus() {
-                this.$http.post(pixUrl + '/user/queryUserByStatus', {'status': '1'}).then(function (res) {
-                    const result = res.body;
-                    if (result.ok) {
-                        this.saleUser = res.body.result;
-                        this.staffCheckInDataMethod()
-                    }
-                }, function () {
-                    console.log('by用户状态请求失败');
-                });
-            },
-            queryReserve(roomId) {
-                this.$http.post(pixUrl + '/reserve/queryReserveByMobile', {'roomId': roomId}).then(function (res) {
-                    this.reserve = res.body
-                    this.roomForm.reserveId = this.reserve.id
-                }, function () {
-                    console.log('by手机号预定信息');
-                });
-            },
-            queryRoomInfo(roomId) {
-                this.$http.post(pixUrl + '/integration/queryRoomInfo', {'roomId': roomId}).then(function (res) {
-                    if (res.body.ok) {
-                        this.enterResult = res.body.result
-                    }
-                }, function () {
-                    console.log('by手机号预定信息');
-                });
-            },
-            queryStaffRoom(roomId, roomNum) {
-                this.$http.post(pixUrl + '/integration/queryStaffRoom', {
-                    'roomId': roomId,
-                    'roomNum': roomNum
-                }).then(function (res) {
-                    const result = res.body;
-                    if (result.ok) {
-                        const cohabitantIdArr = result.result.contract.cohabitantId.split(",");
-                        for (const item in cohabitantIdArr) {
-                            this.staffCheckIn.push(parseInt(cohabitantIdArr[item]));
-                        }
-                    }
-                }, function () {
-                    console.log('by手机号预定信息');
-                });
-            },
-            queryRentEndDate(contractId, status) {
-                this.$http.post(pixUrl + '/rent/queryRentByStatus', {
-                    'contractId': contractId,
-                    'status': status
-                }).then(function (res) {
-                    const result = res.body;
-                    if (result.ok) {
-                        const curRent = result.result[result.result.length - 1]
-                        this.refundForm.rentEnd = curRent.currentDate
-                        const overdueDay = parseInt((this.refundForm.rentRefundDate - this.refundForm.rentEnd) / 1000 / 60 / 60 / 24);
-                        this.refundForm.overdueDay = overdueDay < 0 ? 0 : overdueDay
-                        this.refundForm.noLiveDay = Math.abs(overdueDay)
-                        this.refundForm.dayPrice = curRent.dayPrice
-                    }
-                }, function () {
-                    console.error("查询交租信息报错");
-                });
-            },
-            saveReserve() {
-                this.$refs['reserveForm'].validate((valid) => {
-                    if (valid) {
-                        this.$http.post(pixUrl + '/reserve/saveReserve', this.reserveForm).then(function (res) {
-                            const result = res.body;
-                            if (result.ok) {
-                                this.$notify({
-                                    title: '提醒',
-                                    message: result.message,
-                                    type: 'success',
-                                    duration: 1500,
-                                    offset: 100,
-                                    onClose: () => {
-                                        this.roomStatusChange();
-                                        this.reserveForm = {};
-                                        this.showReserve = false;
-                                        this.showVacant = false;
-                                    }
-                                });
-                            } else {
-                                this.$notify({
-                                    title: '提醒',
-                                    message: result.message,
-                                    type: 'error',
-                                    duration: 1500,
-                                    offset: 100
-                                });
-                            }
-                        }, function () {
-                            console.log('保存信息失败');
-                        });
-                    } else {
-                        console.log('error submit!!');
-                        return false;
-                    }
-                });
-            },
-            saveCheckIn() {
-                this.$refs['roomForm'].validate((valid) => {
-                    if (valid) {
-                        this.$http.post(pixUrl + '/integration/checkIn', this.roomForm).then(function (res) {
-                            const result = res.body;
-                            if (result.ok) {
-                                this.$notify({
-                                    title: '提醒',
-                                    message: result.message,
-                                    type: 'success',
-                                    duration: 1500,
-                                    offset: 100,
-                                    onClose: () => {
-                                        this.roomStatusChange();
-                                        this.roomForm = {};
-                                        this.showCheckIn = false;
-                                        this.showVacant = false;
-                                    }
-                                });
-                            }
-                        }, function () {
-                            console.log('保存信息失败');
-                        });
-                    } else {
-                        console.log('error submit!!');
-                        return false;
-                    }
-                });
-            },
-            saveStaffCheckIn() {
-                this.$http.post(pixUrl + '/integration/staffCheckIn', {
-                    'roomId': this.roomForm.roomId,
-                    'roomNum': this.roomForm.roomNum,
-                    'staffIds': this.staffCheckIn
-                }).then(function (res) {
-                    const result = res.body;
-                    if (result.ok) {
-                        this.$notify({
-                            title: '提醒',
-                            message: result.message,
-                            type: 'success',
-                            duration: 1500,
-                            offset: 100,
-                            onClose: () => {
-                                this.roomStatusChange();
-                                this.roomForm = {};
-                                this.showStaff = false;
-                                this.showVacant = false;
-                            }
-                        });
-                    }
-                }, function () {
-                    console.log('by手机号预定信息');
-                });
-            },
-            saveCheckOut() {
-                let thiz = this
-                this.$refs['refundForm'].validate((valid) => {
-                    if (valid) {
-                        let validFlag = true
-                        for (const item of thiz.$refs['costForm']) {
-                            item.validate((valid1) => {
-                                validFlag = validFlag && valid1
-                            })
-                        }
-                        setTimeout(() => {
-                            if (validFlag) {
-                                //alert(123)
-                                this.$http.post(pixUrl + '/integration/checkOut', this.refundForm).then(function (res) {
-                                    const result = res.body;
-                                    if (result.ok) {
-                                        this.$notify({
-                                            title: '提醒',
-                                            message: result.message,
-                                            type: 'success',
-                                            duration: 1500,
-                                            offset: 100,
-                                            onClose: () => {
-                                                this.roomStatusChange();
-                                                this.refundForm = JSON.parse(JSON.stringify(this.refundFormBak));
-                                                this.showCheckOut = false
-                                            }
-                                        });
-                                    }
-                                }, function () {
-                                    console.log('退房请求失败');
-                                });
-                            }
-                        }, 1000)
-                    }
-                })
-            },
-            toDetail(roomItem) {
-                this.reserve = {};
-                this.roomForm.reserveId = null;
-                this.staffCheckIn = [];
-                if ("1" === roomItem.status) {
-                    this.roomForm.roomId = roomItem.id;
-                    this.roomForm.roomNum = roomItem.roomNum;
-                    this.roomForm.originalPrice = roomItem.price;
-                    this.roomForm.waterNum = roomItem.waterNum;
-
-                    this.reserveForm.roomId = roomItem.id;
-                    this.reserveForm.roomNum = roomItem.roomNum;
-
-                    this.showVacant = true;
-                } else if ("2" === roomItem.status) {
-                    this.queryRoomInfo(roomItem.id)
-                    this.showEnter = true
-                } else if ("5" === roomItem.status) {
-                    this.showVacant = true;
-                    this.queryStaffRoom(roomItem.id, roomItem.roomNum);
-                    setTimeout(() => {
-                        this.roomForm.roomId = roomItem.id;
-                        this.roomForm.roomNum = roomItem.roomNum;
-                        this.showStaff = true;
-                    }, 10)
-                } else if ("6" === roomItem.status) {
-                    this.showVacant = true;
-                    this.queryReserve(roomItem.id)
-                    setTimeout(() => {
-                        this.roomForm.roomId = roomItem.id;
-                        this.roomForm.roomNum = roomItem.roomNum;
-                        this.roomForm.originalPrice = roomItem.price;
-                        this.roomForm.waterNum = roomItem.waterNum;
-                        this.showCheckIn = true;
-                    }, 10)
-                }
-            },
-            checkOut(enterResult) {
-                this.refundForm.rentRefundDate = new Date().getTime()
-                this.queryRentEndDate(enterResult.contract.id, '1');
-                this.showEnter = false;
-                this.refundForm.roomId = enterResult.room.id
-                this.refundForm.roomNum = enterResult.room.roomNum
-                this.refundForm.waterNum = enterResult.room.waterNum
-
-                this.refundForm.customerId = enterResult.contract.customerId
-                this.refundForm.customerName = enterResult.contract.customerName
-                this.refundForm.contractStart = enterResult.contract.contractStart
-                this.refundForm.contractEnd = enterResult.contract.contractEnd
-                this.refundForm.contractId = enterResult.contract.id
-                this.refundForm.contractNo = enterResult.contract.contractNo
-
-
-                this.refundForm.rentStart = enterResult.contract.contractStart
-                this.refundForm.customerMobile = enterResult.contract.customerMobile
-
-
-                this.refundForm.deposit = enterResult.contract.deposit
-
-                this.showCheckOut = true
-            },
-            staffCheckInDataMethod() {
-                let result = []
-                for (const item in this.saleUser) {
-                    result.push({key: this.saleUser[item].id, label: this.saleUser[item].userName})
-                }
-                this.staffCheckInDate = result
-            },
-            tabChange() {
-                if (this.activeName === '整') {
-                    this.roomStatusChange();
-                    return;
-                }
-                this.queryRoomByFloor();
-            },
-            roomStatusChange() {
-                if (this.isEmpty(this.searchParam.status) && this.isEmpty(this.searchParam.roomNum)) {
-                    this.activeName = '1'
-                    this.queryRoomFloor();
-                    this.queryRoomByFloor();
-                } else {
-                    this.roomFloor = ['整']
-                    this.activeName = '整'
-                    this.queryRoomByStatus();
-                }
-            },
-            roomStatusClick(roomStatus) {
-                this.searchParam.status = roomStatus;
-                this.roomStatusChange();
-            },
-            addCohabitant() {
-                this.roomForm.cohabitant.push({'id': this.roomForm.cohabitant.length + 1});
-            },
-            deleteCohabitant(item) {
-                if (this.roomForm.cohabitant.length == 1) return;
-                let index = -1
-                for (let i = 0; i < this.roomForm.cohabitant.length; i++) {
-                    index = i
-                    let value = this.roomForm.cohabitant[i]
-                    if (item.id === value.id) {
-                        break;
-                    }
-                }
-                this.roomForm.cohabitant.splice(index, 1);
-            },
-            addDamage() {
-                this.refundForm.damageArr.push({'id': this.refundForm.damageArr.length});
-            },
-            removeDamage(index) {
-                if (this.refundForm.damageArr.length == 1) {
-                    this.refundForm.damageArr[index].damageName = ''
-                    this.refundForm.damageArr[index].damageMoney = ''
-                    this.removeRefundDetailItem('damage', index)
-                    return;
-                }
-                this.refundForm.damageArr.splice(index, 1);
-                this.removeRefundDetailItem('damage', index)
-            },
-            addOtherCost() {
-                this.refundForm.otherCost.push({'id': this.refundForm.otherCost.length});
-            },
-            removeOtherCost(index) {
-                if (this.refundForm.otherCost.length == 1) {
-                    this.refundForm.otherCost[index].otherName = ''
-                    this.refundForm.otherCost[index].otherMoney = ''
-                    this.removeRefundDetailItem('other', index)
-                    return;
-                }
-                this.refundForm.otherCost.splice(index, 1);
-                this.removeRefundDetailItem('other', index)
-            },
-            realPriceChange() {
-                if (this.isEmpty(this.roomForm.realPrice)) return 0.00
-                let totalFee = this.roomForm.realPrice * 2
-                let reservePrice = this.isEmpty(this.reserve.reservePrice) ? 0 : this.reserve.reservePrice;
-                //totalFee = totalFee - reservePrice
-                this.roomForm.totalFee = totalFee - reservePrice
-            },
-            cardTypeChange() {
-                if (this.roomForm.cardType === '1') {
-                    this.rules.cardNo.push({
-                        pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
-                        message: '身份证号格式不正确',
-                        trigger: 'blur',
-                        flag: 'cardNoValid'
-                    })
-                } else {
-                    let item = ''
-                    for (let value in this.rules.cardNo) {
-                        if (value.flag === 'cardNoValid') item = value
-                    }
-                    let index = this.rules.cardNo.indexOf(item)
-                    this.rules.cardNo.splice(index, 1)
-                }
-            },
-            sharingCardTypeChange(item) {
-                if (item.cardType === '1') {
-                    this.rules.sharingCardNo.push({
-                        pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
-                        message: '身份证号格式不正确',
-                        trigger: 'blur',
-                        flag: 'cardNoValid'
-                    })
-                } else {
-                    this.rules.sharingCardNo = [];
-                }
-            },
-            refundPayTypeChange() {
-                this.refundForm.alipayNo = ''
-                this.refundForm.wechatNo = ''
-                this.refundForm.bank = ''
-                this.refundForm.bankAddress = ''
-                this.refundForm.bankNo = ''
-                //删除换房费
-                if (this.refundForm.refundDetail.length > 0) {
-                    let index = -1
-                    for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
-                        let value = this.refundForm.refundDetail[i]
-                        if (value.subject === '换房费') {
-                            index = i
-                            break;
-                        }
-                    }
-                    if (index != -1) this.refundForm.refundDetail.splice(index, 1);
-                }
-
-                if (this.refundForm.refundPayType === '2') {
-                    this.refundForm.alipayNo = this.refundForm.customerMobile
-                } else if (this.refundForm.refundPayType === '1') {
-                    this.refundForm.wechatNo = this.refundForm.customerMobile
-                } else if (this.refundForm.refundPayType === '4') {
-                    this.searchParam.status = '1'
-                    this.searchParam.roomNum = ''
-                    this.queryVacantrRoom();
-                    this.refundForm.refundDetail.push({'subject': '换房费', 'price': -500})
-                }
-            },
-            checkOutTypeChange() {
-                //删除租房类型退款数据
-                let index = -1
-                for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
-                    index = i
-                    let value = this.refundForm.refundDetail[i]
-                    if (value.flag) {
-                        index = 1
-                        break
-                    }
-                }
-                if (index == 1) this.refundForm.refundDetail.splice(0, 1);
-
-                if (this.refundForm.checkOutType === '2') {
-                    this.refundForm.refundDetail.unshift({
-                        'flag': true,
-                        'subject': '押金',
-                        'price': this.refundForm.deposit
-                    })
-                } else if (this.refundForm.checkOutType === '3') {
-                    this.refundForm.refundDetail.unshift({'flag': true, 'subject': '违约押金', 'price': 0})
-                } else if (this.refundForm.checkOutType === '4') {
-                    const dayTotalFee = parseInt(this.refundForm.noLiveDay) * parseFloat(this.refundForm.dayPrice)
-                    this.refundForm.refundDetail.unshift({'flag': true, 'subject': '结余房租', 'price': dayTotalFee})
-                }
-
-            },
-
-            electricNumBlur() {
-                if (this.refundForm.refundDetail.length > 0) {
-                    let index = -1
-                    for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
-                        let value = this.refundForm.refundDetail[i]
-                        if (value.subject === '结余电费') {
-                            index = i
-                            break;
-                        }
-                    }
-                    if (index != -1) this.refundForm.refundDetail.splice(index, 1);
-                }
-                if (!this.isEmpty(this.refundForm.electricNum)) {
-                    this.refundForm.refundDetail.push({
-                        'flag': false,
-                        'subject': '结余电费',
-                        'price': this.numMul(parseFloat(this.refundForm.electricNum), 1.4)
-                    })
-                }
-            },
-            useWaterNumBlur() {
-                if (this.refundForm.refundDetail.length > 0) {
-                    let index = -1
-                    for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
-                        let value = this.refundForm.refundDetail[i]
-                        if (value.subject === '使用水费') {
-                            index = i
-                            break;
-                        }
-                    }
-                    if (index != -1) this.refundForm.refundDetail.splice(index, 1);
-                }
-                if (!this.isEmpty(this.refundForm.useWaterNum)) {
-                    this.refundForm.refundDetail.push({
-                        'flag': false,
-                        'subject': '使用水费',
-                        'price': this.numMul(this.refundForm.useWaterNum, -7)
-                    })
-                }
-            },
-            costBlur(item, costType) {
-                if (costType === 'damage') {
-                    const damageId = item.id
-                    const damageName = item.damageName;
-                    const damageMoney = item.damageMoney;
-                    if (!this.isEmpty(damageName) && !this.isEmpty(damageMoney)) {
-                        this.removeRefundDetailItem(costType, damageId)
-                        this.refundForm.refundDetail.push({
-                            'damageId': damageId,
-                            'subject': damageName,
-                            'price': -damageMoney
-                        })
-                    }
-                } else if (costType === 'other') {
-                    const otherId = item.id
-                    const otherName = item.otherName;
-                    const otherMoney = item.otherMoney;
-                    if (!this.isEmpty(otherName) && !this.isEmpty(otherMoney)) {
-                        this.removeRefundDetailItem(costType, otherId)
-                        this.refundForm.refundDetail.push({
-                            'otherId': otherId,
-                            'subject': otherName,
-                            'price': otherMoney
-                        })
-                    }
-                }
-            },
-            removeRefundDetailItem(costType, id) {
-                let index = -1
-                for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
-                    let value = this.refundForm.refundDetail[i]
-                    if (costType === 'damage' && value.damageId === id) {
-                        index = i
-                        break
-                    } else if (costType === 'other' && value.otherId === id) {
-                        index = i
-                        break
-                    }
-                }
-                if (index != -1) this.refundForm.refundDetail.splice(index, 1);
-            },
-            isEmpty(obj) {
-                if (typeof obj == "undefined" || obj == null || obj == "") {
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-            getNextMonth(date, addMonth) {
-                if (this.isEmpty(date)) return ''
-                date = new Date(date)
-                let year = date.getFullYear(); //获取当前日期的年份
-                let month = date.getMonth() + 1; //获取当前日期的月份
-                let day = date.getDate() - 1; //获取当前日期的日
-                let year2 = year;
-                let month2 = parseInt(month) + addMonth;
-                if (month2 > 12) {
-                    year2 = parseInt(year2) + 1;
-                    month2 = month2 - 12;
-                }
-                let day2 = day;
-                let days2 = new Date(year2, month2, 0);
-                days2 = days2.getDate();
-                if (day2 > days2) {
-                    day2 = days2;
-                }
-                if (month2 < 10) {
-                    month2 = '0' + month2;
-                }
-
-                let t2 = year2 + '-' + month2 + '-' + day2;
-                return t2;
-            },
-            numMul(x, y) {
-                const multipleNum = 10000
-                x = x * multipleNum
-                y = y * multipleNum
-                return x * y / multipleNum / multipleNum
-            }
+        costRules: {
+          damageMoney: [
+            {validator: checkCostMoney, trigger: 'blur'}
+          ],
+          otherMoney: [
+            {validator: checkCostMoney, trigger: 'blur'}
+          ]
         }
+      }
+    },
+    computed: {
+      contractEnd: function () {
+        const result = this.getNextMonth(this.roomForm.contractStart, this.roomForm.contractMonthNum)
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.roomForm.contractEnd = new Date(result)
+        return result;
+      },
+      refundTotalFee: function () {
+        const mulNum = 10000;
+        let totalFee = 0
+        for (const item of this.refundForm.refundDetail) {
+          const totalFeeMul = (parseFloat(totalFee) * mulNum) + (parseFloat(item.price) * mulNum)
+          totalFee = totalFeeMul / mulNum
+        }
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.refundForm.totalFee = totalFee
+        return totalFee
+      }
+    },
+    filters: {
+      formatDate: function (value) {
+        if (typeof value == "undefined" || value == null || value == "") return ''
+        let date = new Date(value);
+        let y = date.getFullYear();
+        let MM = date.getMonth() + 1;
+        MM = MM < 10 ? "0" + MM : MM;
+        let d = date.getDate();
+        d = d < 10 ? "0" + d : d;
+        return y + "-" + MM + "-" + d;
+      },
+      formatTimer: function (value) {
+        if (typeof value == "undefined" || value == null || value == "") return ''
+        let date = new Date(value);
+        let y = date.getFullYear();
+        let MM = date.getMonth() + 1;
+        MM = MM < 10 ? "0" + MM : MM;
+        let d = date.getDate();
+        d = d < 10 ? "0" + d : d;
+        let h = date.getHours();
+        h = h < 10 ? "0" + h : h;
+        let m = date.getMinutes();
+        m = m < 10 ? "0" + m : m;
+        let s = date.getSeconds();
+        s = s < 10 ? "0" + s : s;
+        return y + "-" + MM + "-" + d + " " + h + ":" + m + ":" + s;
+      }
+    },
+    methods: {
+      queryRoomFloor() {
+        this.$http.post(pixUrl + '/room/queryRoomFloor', {}).then(function (res) {
+          this.roomFloor = res.body
+        }, function () {
+          console.log('楼层请求失败！');
+        });
+      },
+      queryRoomByFloor() {
+        this.$http.post(pixUrl + '/room/queryRoomByFloor', {'floor': this.activeName}).then(function (res) {
+          this.room = res.body
+        }, function () {
+          console.log('楼层房间请求失败');
+        });
+      },
+      queryRoomStatus() {
+        this.$http.post(pixUrl + '/room/queryRoomStatus', {}).then(function (res) {
+          this.roomStatusArr = res.body
+        }, function () {
+          console.log('房间状态请求失败');
+        });
+      },
+      queryRoomByStatus() {
+        this.$http.post(pixUrl + '/room/queryRoomByStatus', this.searchParam).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            this.room = result.result
+          }
+        }, function () {
+          console.log('By房间状态请求失败');
+        });
+      },
+      queryVacantrRoom() {
+        this.$http.post(pixUrl + '/room/queryRoomByStatus', {'status': '1'}).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            this.vacantRoom = result.result
+          }
+        }, function () {
+          console.log('By房间状态请求失败');
+        });
+      },
+      queryUserByStatus() {
+        this.$http.post(pixUrl + '/user/queryUserByStatus', {'status': '1'}).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            this.saleUser = res.body.result;
+            this.staffCheckInDataMethod()
+          }
+        }, function () {
+          console.log('by用户状态请求失败');
+        });
+      },
+      queryReserve(roomId) {
+        this.$http.post(pixUrl + '/reserve/queryReserveByMobile', {'roomId': roomId}).then(function (res) {
+          this.reserve = res.body
+          this.roomForm.reserveId = this.reserve.id
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+      },
+      queryRoomInfo(roomId) {
+        this.$http.post(pixUrl + '/integration/queryRoomInfo', {'roomId': roomId}).then(function (res) {
+          if (res.body.ok) {
+            this.enterResult = res.body.result
+          }
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+      },
+      queryStaffRoom(roomId, roomNum) {
+        this.$http.post(pixUrl + '/integration/queryStaffRoom', {
+          'roomId': roomId,
+          'roomNum': roomNum
+        }).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            const cohabitantIdArr = result.result.contract.cohabitantId.split(",");
+            for (const item in cohabitantIdArr) {
+              this.staffCheckIn.push(parseInt(cohabitantIdArr[item]));
+            }
+          }
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+      },
+      queryRentEndDate(contractId, status) {
+        this.$http.post(pixUrl + '/rent/queryRentByStatus', {
+          'contractId': contractId,
+          'status': status
+        }).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            const curRent = result.result[result.result.length - 1]
+            this.refundForm.rentEnd = curRent.currentDate
+            const overdueDay = parseInt((this.refundForm.rentRefundDate - this.refundForm.rentEnd) / 1000 / 60 / 60 / 24);
+            this.refundForm.overdueDay = overdueDay < 0 ? 0 : overdueDay
+            this.refundForm.noLiveDay = Math.abs(overdueDay)
+            this.refundForm.dayPrice = curRent.dayPrice
+          }
+        }, function () {
+          console.error("查询交租信息报错");
+        });
+      },
+      saveReserve() {
+        this.$refs['reserveForm'].validate((valid) => {
+          if (valid) {
+            this.$http.post(pixUrl + '/reserve/saveReserve', this.reserveForm).then(function (res) {
+              const result = res.body;
+              if (result.ok) {
+                this.$notify({
+                  title: '提醒',
+                  message: result.message,
+                  type: 'success',
+                  duration: 1500,
+                  offset: 100,
+                  onClose: () => {
+                    this.roomStatusChange();
+                    this.reserveForm = {};
+                    this.showReserve = false;
+                    this.showVacant = false;
+                  }
+                });
+              } else {
+                this.$notify({
+                  title: '提醒',
+                  message: result.message,
+                  type: 'error',
+                  duration: 1500,
+                  offset: 100
+                });
+              }
+            }, function () {
+              console.log('保存信息失败');
+            });
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      saveCheckIn() {
+        this.$refs['roomForm'].validate((valid) => {
+          if (valid) {
+            this.$http.post(pixUrl + '/integration/checkIn', this.roomForm).then(function (res) {
+              const result = res.body;
+              if (result.ok) {
+                this.$notify({
+                  title: '提醒',
+                  message: result.message,
+                  type: 'success',
+                  duration: 1500,
+                  offset: 100,
+                  onClose: () => {
+                    this.roomStatusChange();
+                    this.roomForm = {};
+                    this.showCheckIn = false;
+                    this.showVacant = false;
+                  }
+                });
+              }
+            }, function () {
+              console.log('保存信息失败');
+            });
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      saveStaffCheckIn() {
+        this.$http.post(pixUrl + '/integration/staffCheckIn', {
+          'roomId': this.roomForm.roomId,
+          'roomNum': this.roomForm.roomNum,
+          'staffIds': this.staffCheckIn
+        }).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            this.$notify({
+              title: '提醒',
+              message: result.message,
+              type: 'success',
+              duration: 1500,
+              offset: 100,
+              onClose: () => {
+                this.roomStatusChange();
+                this.roomForm = {};
+                this.showStaff = false;
+                this.showVacant = false;
+              }
+            });
+          }
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+      },
+      saveCheckOut() {
+        let thiz = this
+        this.$refs['refundForm'].validate((valid) => {
+          if (valid) {
+            let validFlag = true
+            for (const item of thiz.$refs['costForm']) {
+              item.validate((valid1) => {
+                validFlag = validFlag && valid1
+              })
+            }
+            setTimeout(() => {
+              if (validFlag) {
+                //alert(123)
+                this.$http.post(pixUrl + '/integration/checkOut', this.refundForm).then(function (res) {
+                  const result = res.body;
+                  if (result.ok) {
+                    this.$notify({
+                      title: '提醒',
+                      message: result.message,
+                      type: 'success',
+                      duration: 1500,
+                      offset: 100,
+                      onClose: () => {
+                        this.roomStatusChange();
+                        this.refundForm = JSON.parse(JSON.stringify(this.refundFormBak));
+                        this.showCheckOut = false
+                      }
+                    });
+                  }
+                }, function () {
+                  console.log('退房请求失败');
+                });
+              }
+            }, 1000)
+          }
+        })
+      },
+      toDetail(roomItem) {
+        this.reserve = {};
+        this.roomForm.reserveId = null;
+        this.staffCheckIn = [];
+        if ("1" === roomItem.status) {
+          this.roomForm.roomId = roomItem.id;
+          this.roomForm.roomNum = roomItem.roomNum;
+          this.roomForm.originalPrice = roomItem.price;
+          this.roomForm.waterNum = roomItem.waterNum;
+
+          this.reserveForm.roomId = roomItem.id;
+          this.reserveForm.roomNum = roomItem.roomNum;
+
+          this.showVacant = true;
+        } else if ("2" === roomItem.status) {
+          this.queryRoomInfo(roomItem.id)
+          this.showEnter = true
+        } else if ("5" === roomItem.status) {
+          this.showVacant = true;
+          this.queryStaffRoom(roomItem.id, roomItem.roomNum);
+          setTimeout(() => {
+            this.roomForm.roomId = roomItem.id;
+            this.roomForm.roomNum = roomItem.roomNum;
+            this.showStaff = true;
+          }, 10)
+        } else if ("6" === roomItem.status) {
+          this.showVacant = true;
+          this.queryReserve(roomItem.id)
+          setTimeout(() => {
+            this.roomForm.roomId = roomItem.id;
+            this.roomForm.roomNum = roomItem.roomNum;
+            this.roomForm.originalPrice = roomItem.price;
+            this.roomForm.waterNum = roomItem.waterNum;
+            this.showCheckIn = true;
+          }, 10)
+        }
+      },
+      checkOut(enterResult) {
+        this.refundForm.rentRefundDate = new Date().getTime()
+        this.queryRentEndDate(enterResult.contract.id, '1');
+        this.showEnter = false;
+        this.refundForm.roomId = enterResult.room.id
+        this.refundForm.roomNum = enterResult.room.roomNum
+        this.refundForm.waterNum = enterResult.room.waterNum
+
+        this.refundForm.customerId = enterResult.contract.customerId
+        this.refundForm.customerName = enterResult.contract.customerName
+        this.refundForm.contractStart = enterResult.contract.contractStart
+        this.refundForm.contractEnd = enterResult.contract.contractEnd
+        this.refundForm.contractId = enterResult.contract.id
+        this.refundForm.contractNo = enterResult.contract.contractNo
+
+
+        this.refundForm.rentStart = enterResult.contract.contractStart
+        this.refundForm.customerMobile = enterResult.contract.customerMobile
+
+
+        this.refundForm.deposit = enterResult.contract.deposit
+
+        this.showCheckOut = true
+      },
+      staffCheckInDataMethod() {
+        let result = []
+        for (const item in this.saleUser) {
+          result.push({key: this.saleUser[item].id, label: this.saleUser[item].userName})
+        }
+        this.staffCheckInDate = result
+      },
+      tabChange() {
+        if (this.activeName === '整') {
+          this.roomStatusChange();
+          return;
+        }
+        this.queryRoomByFloor();
+      },
+      roomStatusChange() {
+        if (this.isEmpty(this.searchParam.status) && this.isEmpty(this.searchParam.roomNum)) {
+          this.activeName = '1'
+          this.queryRoomFloor();
+          this.queryRoomByFloor();
+        } else {
+          this.roomFloor = ['整']
+          this.activeName = '整'
+          this.queryRoomByStatus();
+        }
+      },
+      roomStatusClick(roomStatus) {
+        this.searchParam.status = roomStatus;
+        this.roomStatusChange();
+      },
+      addCohabitant() {
+        this.roomForm.cohabitant.push({'id': this.roomForm.cohabitant.length + 1});
+      },
+      deleteCohabitant(item) {
+        if (this.roomForm.cohabitant.length == 1) return;
+        let index = -1
+        for (let i = 0; i < this.roomForm.cohabitant.length; i++) {
+          index = i
+          let value = this.roomForm.cohabitant[i]
+          if (item.id === value.id) {
+            break;
+          }
+        }
+        this.roomForm.cohabitant.splice(index, 1);
+      },
+      addDamage() {
+        this.refundForm.damageArr.push({'id': this.refundForm.damageArr.length});
+      },
+      removeDamage(index) {
+        if (this.refundForm.damageArr.length == 1) {
+          this.refundForm.damageArr[index].damageName = ''
+          this.refundForm.damageArr[index].damageMoney = ''
+          this.removeRefundDetailItem('damage', index)
+          return;
+        }
+        this.refundForm.damageArr.splice(index, 1);
+        this.removeRefundDetailItem('damage', index)
+      },
+      addOtherCost() {
+        this.refundForm.otherCost.push({'id': this.refundForm.otherCost.length});
+      },
+      removeOtherCost(index) {
+        if (this.refundForm.otherCost.length == 1) {
+          this.refundForm.otherCost[index].otherName = ''
+          this.refundForm.otherCost[index].otherMoney = ''
+          this.removeRefundDetailItem('other', index)
+          return;
+        }
+        this.refundForm.otherCost.splice(index, 1);
+        this.removeRefundDetailItem('other', index)
+      },
+      realPriceChange() {
+        if (this.isEmpty(this.roomForm.realPrice)) return 0.00
+        let totalFee = this.roomForm.realPrice * 2
+        let reservePrice = this.isEmpty(this.reserve.reservePrice) ? 0 : this.reserve.reservePrice;
+        //totalFee = totalFee - reservePrice
+        this.roomForm.totalFee = totalFee - reservePrice
+      },
+      cardTypeChange() {
+        if (this.roomForm.cardType === '1') {
+          this.rules.cardNo.push({
+            pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
+            message: '身份证号格式不正确',
+            trigger: 'blur',
+            flag: 'cardNoValid'
+          })
+        } else {
+          let item = ''
+          for (let value in this.rules.cardNo) {
+            if (value.flag === 'cardNoValid') item = value
+          }
+          let index = this.rules.cardNo.indexOf(item)
+          this.rules.cardNo.splice(index, 1)
+        }
+      },
+      sharingCardTypeChange(item) {
+        if (item.cardType === '1') {
+          this.rules.sharingCardNo.push({
+            pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
+            message: '身份证号格式不正确',
+            trigger: 'blur',
+            flag: 'cardNoValid'
+          })
+        } else {
+          this.rules.sharingCardNo = [];
+        }
+      },
+      refundPayTypeChange() {
+        this.refundForm.alipayNo = ''
+        this.refundForm.wechatNo = ''
+        this.refundForm.bank = ''
+        this.refundForm.bankAddress = ''
+        this.refundForm.bankNo = ''
+        //删除换房费
+        if (this.refundForm.refundDetail.length > 0) {
+          let index = -1
+          for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
+            let value = this.refundForm.refundDetail[i]
+            if (value.subject === '换房费') {
+              index = i
+              break;
+            }
+          }
+          if (index != -1) this.refundForm.refundDetail.splice(index, 1);
+        }
+
+        if (this.refundForm.refundPayType === '2') {
+          this.refundForm.alipayNo = this.refundForm.customerMobile
+        } else if (this.refundForm.refundPayType === '1') {
+          this.refundForm.wechatNo = this.refundForm.customerMobile
+        } else if (this.refundForm.refundPayType === '4') {
+          this.searchParam.status = '1'
+          this.searchParam.roomNum = ''
+          this.queryVacantrRoom();
+          this.refundForm.refundDetail.push({'subject': '换房费', 'price': -500})
+        }
+      },
+      checkOutTypeChange() {
+        //删除租房类型退款数据
+        let index = -1
+        for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
+          index = i
+          let value = this.refundForm.refundDetail[i]
+          if (value.flag) {
+            index = 1
+            break
+          }
+        }
+        if (index == 1) this.refundForm.refundDetail.splice(0, 1);
+
+        if (this.refundForm.checkOutType === '2') {
+          this.refundForm.refundDetail.unshift({
+            'flag': true,
+            'subject': '押金',
+            'price': this.refundForm.deposit
+          })
+        } else if (this.refundForm.checkOutType === '3') {
+          this.refundForm.refundDetail.unshift({'flag': true, 'subject': '违约押金', 'price': 0})
+        } else if (this.refundForm.checkOutType === '4') {
+          const dayTotalFee = parseInt(this.refundForm.noLiveDay) * parseFloat(this.refundForm.dayPrice)
+          this.refundForm.refundDetail.unshift({'flag': true, 'subject': '结余房租', 'price': dayTotalFee})
+        }
+
+      },
+
+      electricNumBlur() {
+        if (this.refundForm.refundDetail.length > 0) {
+          let index = -1
+          for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
+            let value = this.refundForm.refundDetail[i]
+            if (value.subject === '结余电费') {
+              index = i
+              break;
+            }
+          }
+          if (index != -1) this.refundForm.refundDetail.splice(index, 1);
+        }
+        if (!this.isEmpty(this.refundForm.electricNum)) {
+          this.refundForm.refundDetail.push({
+            'flag': false,
+            'subject': '结余电费',
+            'price': this.numMul(parseFloat(this.refundForm.electricNum), 1.4)
+          })
+        }
+      },
+      useWaterNumBlur() {
+        if (this.refundForm.refundDetail.length > 0) {
+          let index = -1
+          for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
+            let value = this.refundForm.refundDetail[i]
+            if (value.subject === '使用水费') {
+              index = i
+              break;
+            }
+          }
+          if (index != -1) this.refundForm.refundDetail.splice(index, 1);
+        }
+        if (!this.isEmpty(this.refundForm.useWaterNum)) {
+          this.refundForm.refundDetail.push({
+            'flag': false,
+            'subject': '使用水费',
+            'price': this.numMul(this.refundForm.useWaterNum, -7)
+          })
+        }
+      },
+      costBlur(item, costType) {
+        if (costType === 'damage') {
+          const damageId = item.id
+          const damageName = item.damageName;
+          const damageMoney = item.damageMoney;
+          if (!this.isEmpty(damageName) && !this.isEmpty(damageMoney)) {
+            this.removeRefundDetailItem(costType, damageId)
+            this.refundForm.refundDetail.push({
+              'damageId': damageId,
+              'subject': damageName,
+              'price': -damageMoney
+            })
+          }
+        } else if (costType === 'other') {
+          const otherId = item.id
+          const otherName = item.otherName;
+          const otherMoney = item.otherMoney;
+          if (!this.isEmpty(otherName) && !this.isEmpty(otherMoney)) {
+            this.removeRefundDetailItem(costType, otherId)
+            this.refundForm.refundDetail.push({
+              'otherId': otherId,
+              'subject': otherName,
+              'price': otherMoney
+            })
+          }
+        }
+      },
+      removeRefundDetailItem(costType, id) {
+        let index = -1
+        for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
+          let value = this.refundForm.refundDetail[i]
+          if (costType === 'damage' && value.damageId === id) {
+            index = i
+            break
+          } else if (costType === 'other' && value.otherId === id) {
+            index = i
+            break
+          }
+        }
+        if (index != -1) this.refundForm.refundDetail.splice(index, 1);
+      },
+      isEmpty(obj) {
+        if (typeof obj == "undefined" || obj == null || obj == "") {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      getNextMonth(date, addMonth) {
+        if (this.isEmpty(date)) return ''
+        date = new Date(date)
+        let year = date.getFullYear(); //获取当前日期的年份
+        let month = date.getMonth() + 1; //获取当前日期的月份
+        let day = date.getDate() - 1; //获取当前日期的日
+        let year2 = year;
+        let month2 = parseInt(month) + addMonth;
+        if (month2 > 12) {
+          year2 = parseInt(year2) + 1;
+          month2 = month2 - 12;
+        }
+        let day2 = day;
+        let days2 = new Date(year2, month2, 0);
+        days2 = days2.getDate();
+        if (day2 > days2) {
+          day2 = days2;
+        }
+        if (month2 < 10) {
+          month2 = '0' + month2;
+        }
+
+        let t2 = year2 + '-' + month2 + '-' + day2;
+        return t2;
+      },
+      numMul(x, y) {
+        const multipleNum = 10000
+        x = x * multipleNum
+        y = y * multipleNum
+        return x * y / multipleNum / multipleNum
+      }
     }
+  }
 </script>
 
 <style scoped>
