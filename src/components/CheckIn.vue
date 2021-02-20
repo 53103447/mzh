@@ -173,6 +173,18 @@
                 <el-input v-model="roomForm.remark" placeholder="备注"
                           style="width: 217px"></el-input>
               </el-form-item>
+              <el-form-item label="是否换房">
+                <el-checkbox v-model="roomForm.isForward" @change="forwardChange">是</el-checkbox>
+              </el-form-item>
+              <el-form-item label="换房结转单" v-if="roomForm.isForward">
+                <el-select v-model="roomForm.settlementId" clearable placeholder="销售员" @change="selectSettlementById">
+                  <el-option v-for="item in forwardList" :key="item.id" :label="item.roomNum+'结转单'"
+                             :value="item.id"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="结转单金额" v-if="roomForm.isForward">
+                {{roomForm.forwarTotal}}
+              </el-form-item>
               <el-form-item label="费用合计">
                 {{roomForm.totalFee}}
               </el-form-item>
@@ -192,6 +204,7 @@
     created() {
       this.queryRoomByStatus();
       this.queryUserByStatus();
+
     },
     data() {
       return {
@@ -257,7 +270,10 @@
         reserve: {},
         payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {'key': 'POS机','value': '3'}, {'key': '现金', 'value': '4'}],
         saleUser: [],
-        vacantRoom:[]
+        vacantRoom:[],
+        isForward:false,
+        forwardList:[],
+        selectForward:{}
       }
     },
     computed: {
@@ -270,7 +286,7 @@
     },
     methods: {
       queryRoomByStatus() {
-        this.$http.post(pixUrl + '/room/queryRoomByStatus', {'status':'1'}).then(function (res) {
+        this.$http.post(pixUrl + '/room/queryRoomByStatus', {'status':'1,6'}).then(function (res) {
           const result = res.body;
           if (result.ok) {
             this.vacantRoom = result.result
@@ -296,6 +312,25 @@
           const result = res.body;
           if (result.ok) {
             this.saleUser = res.body.result;
+          }
+        }, function () {
+          console.log('查询销售员失败');
+        });
+      },
+      queryReserve(roomId) {
+        this.$http.post(pixUrl + '/reserve/queryReserveByMobile', {'roomId': roomId}).then(function (res) {
+          this.reserve = res.body
+          this.roomForm.reserveId = this.reserve.id;
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+      },
+      selectSettlementById(){
+        this.$http.post(pixUrl + '/settlement/selectSettlementById', {'id': this.roomForm.settlementId}).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            this.roomForm.forwarTotal = result.result.totalFee;
+            this.roomForm.totalFee = this.roomForm.totalFee - result.result.totalFee;
           }
         }, function () {
           console.log('查询销售员失败');
@@ -332,19 +367,11 @@
         this.roomForm.cohabitant.push({'id': this.roomForm.cohabitant.length + 1});
       },
       deleteCohabitant(index) {
-        /*if (this.roomForm.cohabitant.length == 1) return;
-        let index = -1
-        for (let i = 0; i < this.roomForm.cohabitant.length; i++) {
-          index = i
-          let value = this.roomForm.cohabitant[i]
-          if (item.id === value.id) {
-            break;
-          }
-        }*/
         this.roomForm.cohabitant.splice(index, 1);
       },
       roomChange(){
         this.queryRoomById(this.roomForm.roomId);
+        this.queryReserve(this.roomForm.roomId);
       },
       cardTypeChange() {
         if (this.roomForm.cardType === '1') {
@@ -369,6 +396,18 @@
         let reservePrice = this.isEmpty(this.reserve.reservePrice) ? 0 : this.reserve.reservePrice;
         //totalFee = totalFee - reservePrice
         this.roomForm.totalFee = totalFee - reservePrice
+      },
+      forwardChange(){
+        if(this.roomForm.isForward){
+          this.$http.post(pixUrl + '/settlement/selectSettlementByStatus', {}).then(function (res) {
+            const result = res.body;
+            if (result.ok) {
+              this.forwardList = result.result
+            }
+          }, function () {
+            console.log('根据ID查询房间失败');
+          });
+        }
       },
       isEmpty(obj) {
         if (typeof obj == "undefined" || obj == null || obj == "") {

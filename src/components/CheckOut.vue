@@ -11,7 +11,7 @@
           <el-tabs value="first">
             <el-tab-pane label="合同信息" name="first">
               <el-form-item label="房间号">
-                <el-select v-model="refundForm.roomId" filterable placeholder="请选择入住房间" @change="roomChange">
+                <el-select v-model="refundForm.roomId" filterable placeholder="请选择退租房间" @change="roomChange">
                   <el-option v-for="item in enterRoom" :key="item.id" :label="item.roomNum" :value="item.id">
                   </el-option>
                 </el-select>
@@ -176,8 +176,6 @@
             <el-table-column prop="price" label="金额（元）"></el-table-column>
           </el-table>
           <el-divider content-position="right"><h1>退款合计：{{refundTotalFee}}</h1></el-divider>
-          <el-divider></el-divider>
-          <div>{{refundForm}}</div>
         </el-tab-pane>
       </el-tabs>
     </el-form>
@@ -240,7 +238,7 @@
     },
     computed: {
       refundTotalFee: function () {
-        const mulNum = 10000;
+        const mulNum = 100;
         let totalFee = 0
         for (const item of this.refundForm.refundDetail) {
           const totalFeeMul = (parseFloat(totalFee) * mulNum) + (parseFloat(item.price) * mulNum)
@@ -272,6 +270,48 @@
           console.log('By房间状态请求失败');
         });
       },
+      queryRentEndDate(contractId, status) {
+        this.$http.post(pixUrl + '/rent/queryRentByStatus', {
+          'contractId': contractId,
+          'status': status
+        }).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            const curRent = result.result[result.result.length - 1]
+            this.refundForm.rentEnd = curRent.currentDate
+            const overdueDay = parseInt((this.refundForm.rentRefundDate - this.refundForm.rentEnd) / 1000 / 60 / 60 / 24);
+            this.refundForm.overdueDay = overdueDay < 0 ? 0 : overdueDay
+            this.refundForm.noLiveDay = Math.abs(overdueDay)
+            this.refundForm.dayPrice = curRent.dayPrice
+          }
+        }, function () {
+          console.error("查询交租信息报错");
+        });
+      },
+      queryRoomInfo(roomId) {
+        this.$http.post(pixUrl + '/integration/queryRoomInfo', {'roomId': roomId}).then(function (res) {
+          const result = res.body
+          if (result.ok) {
+            const value = result.result
+            this.queryRentEndDate(value.contract.id,'1')
+            //this.enterResult = res.body.result
+            this.refundForm.waterNum = value.room.waterNum
+
+            this.refundForm.customerId = value.contract.customerId
+            this.refundForm.customerName = value.contract.customerName
+            this.refundForm.contractStart = value.contract.contractStart
+            this.refundForm.contractEnd = value.contract.contractEnd
+            this.refundForm.contractId = value.contract.id
+            this.refundForm.contractNo = value.contract.contractNo
+            this.refundForm.rentStart = value.contract.contractStart
+            this.refundForm.customerMobile = value.contract.customerMobile
+
+            this.refundForm.deposit = value.contract.deposit
+          }
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+      },
       saveCheckOut() {
         let thiz = this
         this.$refs['refundForm'].validate((valid) => {
@@ -295,9 +335,8 @@
                       duration: 1500,
                       offset: 100,
                       onClose: () => {
-                        this.roomStatusChange();
-                        this.refundForm = JSON.parse(JSON.stringify(this.refundFormBak));
-                        this.showCheckOut = false
+                        // this.roomStatusChange(); 跳转房态页面
+                        // this.refundForm = JSON.parse(JSON.stringify(this.refundFormBak));
                       }
                     });
                   }
@@ -366,7 +405,48 @@
         }
       },
       roomChange(){
-
+        this.queryRoomInfo(this.refundForm.roomId);
+      },
+      costBlur(item, costType) {
+        if (costType === 'damage') {
+          const damageId = item.id
+          const damageName = item.damageName;
+          const damageMoney = item.damageMoney;
+          if (!this.isEmpty(damageName) && !this.isEmpty(damageMoney)) {
+            this.removeRefundDetailCost(costType, damageId)
+            this.refundForm.refundDetail.push({
+              'damageId': damageId,
+              'subject': damageName,
+              'price': -damageMoney
+            })
+          }
+        } else if (costType === 'other') {
+          const otherId = item.id
+          const otherName = item.otherName;
+          const otherMoney = item.otherMoney;
+          if (!this.isEmpty(otherName) && !this.isEmpty(otherMoney)) {
+            this.removeRefundDetailCost(costType, otherId)
+            this.refundForm.refundDetail.push({
+              'otherId': otherId,
+              'subject': otherName,
+              'price': otherMoney
+            })
+          }
+        }
+      },
+      removeRefundDetailCost(costType, id) {
+        let index = -1
+        for (let i = 0; i < this.refundForm.refundDetail.length; i++) {
+          let value = this.refundForm.refundDetail[i]
+          if (costType === 'damage' && value.damageId === id) {
+            index = i
+            break
+          } else if (costType === 'other' && value.otherId === id) {
+            index = i
+            break
+          }
+        }
+        if (index != -1) this.refundForm.refundDetail.splice(index, 1);
       },
       deleteRefundDetail(value1,value2,value3){
         let index = -1
@@ -388,11 +468,11 @@
         if (this.refundForm.damageArr.length == 1) {
           this.refundForm.damageArr[index].damageName = ''
           this.refundForm.damageArr[index].damageMoney = ''
-          this.removeRefundDetailItem('damage', index)
+          this.removeRefundDetailCost('damage', index)
           return;
         }
         this.refundForm.damageArr.splice(index, 1);
-        this.removeRefundDetailItem('damage', index)
+        this.removeRefundDetailCost('damage', index)
       },
       addOtherCost() {
         this.refundForm.otherCost.push({'id': this.refundForm.otherCost.length});
@@ -401,11 +481,11 @@
         if (this.refundForm.otherCost.length == 1) {
           this.refundForm.otherCost[index].otherName = ''
           this.refundForm.otherCost[index].otherMoney = ''
-          this.removeRefundDetailItem('other', index)
+          this.removeRefundDetailCost('other', index)
           return;
         }
         this.refundForm.otherCost.splice(index, 1);
-        this.removeRefundDetailItem('other', index)
+        this.removeRefundDetailCost('other', index)
       },
       isEmpty(obj) {
         if (typeof obj == "undefined" || obj == null || obj == "") {

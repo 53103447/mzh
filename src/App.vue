@@ -5,8 +5,8 @@
 </template>
 
 <script>
-// import HelloWorld from './components/CheckIn.vue'
-import HelloWorld from './components/CheckOut.vue'
+// import HelloWorld from './components/RoomState.vue'
+import HelloWorld from './components/CheckIn.vue'
 
 export default {
   name: 'app',
