@@ -142,11 +142,11 @@
                 {{roomForm.originalPrice}}
               </el-form-item>
               <el-form-item label="成交房价" prop="realPrice">
-                <el-input v-model="roomForm.realPrice" placeholder="成交房价" maxlength="4"
+                <el-input v-model.number="roomForm.realPrice" placeholder="成交房价" maxlength="4"
                           style="width: 217px" @blur="realPriceChange()"></el-input>
               </el-form-item>
               <el-form-item label="押金">
-                <el-input v-model="roomForm.realPrice" placeholder="押金" :disabled="true"
+                <el-input v-model.number="roomForm.deposit" placeholder="押金" :disabled="true"
                           style="width: 217px"></el-input>
               </el-form-item>
               <el-form-item label="收款方式" prop="payType">
@@ -176,8 +176,8 @@
               <el-form-item label="是否换房">
                 <el-checkbox v-model="roomForm.isForward" @change="forwardChange">是</el-checkbox>
               </el-form-item>
-              <el-form-item label="换房结转单" v-if="roomForm.isForward">
-                <el-select v-model="roomForm.settlementId" clearable placeholder="销售员" @change="selectSettlementById">
+              <el-form-item label="换房结转单" v-if="roomForm.isForward" prop="settlementId">
+                <el-select v-model="roomForm.settlementId" placeholder="结转单" @change="selectSettlementById">
                   <el-option v-for="item in forwardList" :key="item.id" :label="item.roomNum+'结转单'"
                              :value="item.id"></el-option>
                 </el-select>
@@ -208,7 +208,7 @@
     },
     data() {
       return {
-        roomForm: {'contractMonthNum': 1, cohabitant: [{'abc': 1}],'originalPrice':0, 'totalFee': 0},
+        roomForm: {'contractMonthNum': 1, cohabitant: [{'abc': 1}],'originalPrice':0,'realPrice':0,'deposit':0, 'totalFee': 0,'forwarTotal':0},
         rules: {
           customerName: [
             {required: true, message: '请输入租房姓名', trigger: 'blur'},
@@ -259,6 +259,9 @@
           ],
           cardEffective: [
             {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
+          ],
+          settlementId: [
+            {required: true, message: '请选择结转单', trigger: 'change'}
           ]
         },
         pickerDisableOptions: {
@@ -273,6 +276,7 @@
         vacantRoom:[],
         isForward:false,
         forwardList:[],
+        forwardDeposit:0,
         selectForward:{}
       }
     },
@@ -330,7 +334,14 @@
           const result = res.body;
           if (result.ok) {
             this.roomForm.forwarTotal = result.result.totalFee;
-            this.roomForm.totalFee = this.roomForm.totalFee - result.result.totalFee;
+            // this.roomForm.totalFee = this.roomForm.totalFee - result.result.totalFee;
+            this.forwardDeposit = result.result.deposit
+            if(this.roomForm.realPrice < this.forwardDeposit){
+              this.roomForm.deposit = this.forwardDeposit
+            }else{
+              this.roomForm.deposit = this.roomForm.realPrice;
+            }
+            this.computeTotalFee()
           }
         }, function () {
           console.log('查询销售员失败');
@@ -392,12 +403,23 @@
       },
       realPriceChange() {
         if (this.isEmpty(this.roomForm.realPrice)) return 0.00
-        let totalFee = this.roomForm.realPrice * 2
+        if(this.roomForm.realPrice < this.forwardDeposit){
+          this.roomForm.deposit = this.forwardDeposit
+        }else{
+          this.roomForm.deposit = this.roomForm.realPrice;
+        }
+        this.computeTotalFee()
+      },
+      computeTotalFee(){
+        let totalFee = parseFloat(this.roomForm.realPrice) + parseFloat(this.roomForm.deposit)
         let reservePrice = this.isEmpty(this.reserve.reservePrice) ? 0 : this.reserve.reservePrice;
         //totalFee = totalFee - reservePrice
-        this.roomForm.totalFee = totalFee - reservePrice
+        const mulNum = 100;
+        const result = totalFee*mulNum - reservePrice*mulNum - this.roomForm.forwarTotal*mulNum
+        this.roomForm.totalFee = result/mulNum
       },
       forwardChange(){
+        this.roomForm.settlementId=''
         if(this.roomForm.isForward){
           this.$http.post(pixUrl + '/settlement/selectSettlementByStatus', {}).then(function (res) {
             const result = res.body;
@@ -407,6 +429,9 @@
           }, function () {
             console.log('根据ID查询房间失败');
           });
+        }else{
+          this.roomForm.forwarTotal = 0;
+          this.computeTotalFee();
         }
       },
       isEmpty(obj) {
