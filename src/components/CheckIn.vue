@@ -204,7 +204,6 @@
     created() {
       this.queryRoomByStatus();
       this.queryUserByStatus();
-
     },
     data() {
       return {
@@ -419,7 +418,6 @@
         this.roomForm.totalFee = result/mulNum
       },
       forwardChange(){
-        this.roomForm.settlementId=''
         if(this.roomForm.isForward){
           this.$http.post(pixUrl + '/settlement/selectSettlementByStatus', {}).then(function (res) {
             const result = res.body;
@@ -430,6 +428,7 @@
             console.log('根据ID查询房间失败');
           });
         }else{
+          this.roomForm.settlementId=''
           this.roomForm.forwarTotal = 0;
           this.computeTotalFee();
         }

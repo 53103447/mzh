@@ -318,6 +318,7 @@
         enterResult: {'room': {}, 'contract': {}, 'customers': []},
         payTypeSelect: {'1': "微信", '2': "支付宝", '3': "POS机", '4': '现金'},
         payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {'key': 'POS机','value': '3'}, {'key': '现金', 'value': '4'}],
+        rentStatusMap:{'0':'待交租','1':'已交租','2':'违约'},
         pickerDisableOptions: {
           disabledDate(time) {
             const tomorrow = Date.now()

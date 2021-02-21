@@ -106,12 +106,6 @@
                 <el-input v-model="refundForm.wechatNo" placeholder="微信账号"
                           style="width: 212px"></el-input>
               </el-form-item>
-              <el-form-item label="结转房间" v-if="refundForm.refundPayType==='4'">
-                <el-select v-model="refundForm.carryRoomId" filterable clearable placeholder="结转房间">
-                  <el-option v-for="item in vacantRoom" :key="item.id" :label="item.roomNum"
-                             :value="item.id"></el-option>
-                </el-select>
-              </el-form-item>
             </el-tab-pane>
           </el-tabs>
         </el-col>
@@ -202,7 +196,6 @@
       }
       return{
         enterRoom:{},
-        vacantRoom:{},
         refundForm: {'damageArr': [{'id': 0}],'otherCost': [{'id': 0}],'rentEnd': '','rentRefundDate': new Date(),'refundDetail': [],'totalFee': 0,'waterNum': 0},
         rules: {
           refundPayType: [
@@ -255,16 +248,6 @@
           const result = res.body;
           if (result.ok) {
             this.enterRoom = result.result
-          }
-        }, function () {
-          console.log('By房间状态请求失败');
-        });
-      },
-      queryVacantrRoom() {
-        this.$http.post(pixUrl + '/room/queryRoomByStatus', {'status': '1'}).then(function (res) {
-          const result = res.body;
-          if (result.ok) {
-            this.vacantRoom = result.result
           }
         }, function () {
           console.log('By房间状态请求失败');
@@ -400,7 +383,6 @@
         } else if (this.refundForm.refundPayType === '1') {
           this.refundForm.wechatNo = this.refundForm.customerMobile
         } else if (this.refundForm.refundPayType === '4') {
-          this.queryVacantrRoom();
           this.refundForm.refundDetail.push({'subject': '换房费', 'price': -500})
         }
       },
