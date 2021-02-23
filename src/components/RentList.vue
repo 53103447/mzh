@@ -20,7 +20,7 @@
       <el-table-column prop="surplusDay" label="剩余天数"></el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-button type="primary" @click="toRentMoney(scope.row.id)">缴费</el-button>
+          <el-button type="primary" size="mini" @click="toRentMoney(scope.row.id)">缴费</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -50,7 +50,7 @@
         </el-row>
       </div>
       <div>
-        <el-form ref="rentForm" :model="rentForm" label-width="160px">
+        <el-form ref="rentForm" :model="rentForm" :rules="rules" label-width="160px">
           <el-form-item label="房间号">
             {{rentForm.roomNum}}
           </el-form-item>
@@ -66,8 +66,8 @@
           <el-form-item label="水表数">
             <el-input v-model="rentForm.waterNum" placeholder="水表数" style="width: 217px"></el-input>
           </el-form-item>
-          <el-form-item label="水费">
-            <el-input v-model="rentForm.waterPrice" placeholder="水费" style="width: 217px"></el-input>
+          <el-form-item label="水费" prop="waterPrice">
+            <el-input v-model.number="rentForm.waterPrice" placeholder="水费" style="width: 217px" @blur="waterPriceChange"></el-input>
           </el-form-item>
           <el-form-item label="支付方式" prop="payType">
             <el-select v-model="rentForm.payType" clearable placeholder="支付方式">
@@ -102,6 +102,14 @@
         dialogVisible:false,
         rentForm:{},
         payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {'key': 'POS机','value': '3'}, {'key': '现金', 'value': '4'}],
+        rules: {
+          waterPrice:[
+            {type: 'number', message: '请输入数字', trigger: 'blur'},
+          ],
+          payType: [
+            {required: true, message: '请选择收款方式', trigger: 'change'}
+          ]
+        }
       }
     },
     methods:{
@@ -129,14 +137,41 @@
           const result = res.body;
           if(result.ok){
             this.rentForm = result.result
+            this.rentForm.totalFee = this.rentForm.rentPrice
             this.dialogVisible = true
           }
         }, function () {
           console.log('查询缴费详情失败！');
         });
       },
+      waterPriceChange(){
+        if(!this.isEmpty(this.rentForm.waterPrice) && Number.isInteger(this.rentForm.waterPrice)){
+          this.rentForm.totalFee = this.rentForm.rentPrice + this.rentForm.waterPrice
+        }else{
+          this.rentForm.totalFee = this.rentForm.rentPrice
+        }
+      },
       saveRentInfo(){
-
+        this.$refs['rentForm'].validate((valid) => {
+          if (valid) {
+            this.rentForm.status = '1'
+            this.$http.post(pixUrl + '/rent/updateRentById', this.rentForm).then(function (res) {
+              const result = res.body;
+              if (result.ok) {
+                this.searchParam.pageNo = 1
+                this.queryRentInfo()
+                this.dialogVisible = false
+              }
+            })
+          }
+        })
+      },
+      isEmpty(obj) {
+        if (typeof obj == "undefined" || obj == null || obj == "") {
+          return true;
+        } else {
+          return false;
+        }
       }
     },
     filters: {

@@ -207,6 +207,11 @@
               <h3>居住人详情</h3>
             </template>
             <el-table :data="enterResult.customers" border style="width: 100%">
+              <el-table-column label="客户类型">
+                <template slot-scope="scope">
+                  {{scope.$index==0?'签约人':'同住人' }}
+                </template>
+              </el-table-column>
               <el-table-column prop="name" label="客户姓名"></el-table-column>
               <el-table-column label="性别">
                 <template slot-scope="scope">
