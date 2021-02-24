@@ -143,7 +143,7 @@
               </el-form-item>
               <el-form-item label="成交房价" prop="realPrice">
                 <el-input v-model.number="roomForm.realPrice" placeholder="成交房价" maxlength="4"
-                          style="width: 217px" @blur="realPriceChange()"></el-input>
+                          style="width: 217px" @input="realPriceChange()"></el-input>
               </el-form-item>
               <el-form-item label="押金">
                 <el-input v-model.number="roomForm.deposit" placeholder="押金" :disabled="true"
