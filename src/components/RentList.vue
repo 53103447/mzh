@@ -1,5 +1,22 @@
 <template>
   <div style="padding: 15px">
+    <el-row type="flex" justify="center" align="middle">
+      <el-col :span="1">
+        房间号
+      </el-col>
+      <el-col :span="3">
+        <el-input v-model="searchParam.roomNum" placeholder="请输入房间号" clearable size="small" @input="queryRentInfo"></el-input>
+      </el-col>
+      <el-col :span="1"></el-col>
+      <el-col :span="1" style="margin-right: 8px">
+        客户姓名
+      </el-col>
+      <el-col :span="3">
+        <el-input v-model="searchParam.customerName" placeholder="请输入客户姓名" clearable size="small" @input="queryRentInfo"></el-input>
+      </el-col>
+      <el-col :span="1"></el-col>
+    </el-row>
+    <el-divider></el-divider>
     <el-table :data="tableData" border style="width: 100%" size="small">
       <el-table-column prop="roomNum" label="房间号"> </el-table-column>
       <el-table-column prop="contractNo" label="合同号"> </el-table-column>

@@ -1,11 +1,48 @@
 <template>
   <div style="padding: 15px">
+    <el-row type="flex" justify="center" align="middle">
+      <el-col :span="1">
+        房间号
+      </el-col>
+      <el-col :span="3">
+        <el-input v-model="searchParam.roomNum" placeholder="请输入房间号" clearable size="small" @input="queryContractInfo"></el-input>
+      </el-col>
+      <el-col :span="1"></el-col>
+      <el-col :span="1" style="margin-right: 8px">
+        客户姓名
+      </el-col>
+      <el-col :span="3">
+        <el-input v-model="searchParam.customerName" placeholder="请输入客户姓名" clearable size="small" @input="queryContractInfo"></el-input>
+      </el-col>
+      <el-col :span="1"></el-col>
+      <el-col :span="1" style="margin-right: 8px">
+        合同状态
+      </el-col>
+      <el-col :span="3">
+        <el-select v-model="searchParam.status" clearable placeholder="请选择" @change="queryContractInfo">
+          <el-option v-for="item in contractStatusMap" :key="item.value" :label="item.key" :value="item.value">
+          </el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="1"></el-col>
+      <el-col :span="1" style="margin-right: 8px">
+        办理状态
+      </el-col>
+      <el-col :span="3">
+        <el-select v-model="searchParam.handleStatus" clearable placeholder="请选择" @change="queryContractInfo">
+          <el-option v-for="item in handelStatusMap" :key="item.value" :label="item.key" :value="item.value">
+          </el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="5"></el-col>
+    </el-row>
+    <el-divider></el-divider>
     <el-table :data="tableData" border style="width: 100%" size="small">
-      <el-table-column prop="roomNum" label="房间号"> </el-table-column>
-      <el-table-column prop="contractNo" label="合同号"> </el-table-column>
-      <el-table-column prop="customerName" label="租户"> </el-table-column>
-      <el-table-column prop="customerMobile" label="租户电话"> </el-table-column>
-      <el-table-column prop="realPrice" label="房价"> </el-table-column>
+      <el-table-column prop="roomNum" label="房间号"></el-table-column>
+      <el-table-column prop="contractNo" label="合同号"></el-table-column>
+      <el-table-column prop="customerName" label="租户"></el-table-column>
+      <el-table-column prop="customerMobile" label="租户电话"></el-table-column>
+      <el-table-column prop="realPrice" label="房价"></el-table-column>
       <el-table-column label="合同开始日期">
         <template slot-scope="scope">
           {{scope.row.contractStart | formatDate}}
@@ -207,6 +244,8 @@
         contractStatus:{'1':'执行中','2':'到期退租','3':'违约退租','4':'提前退租'},
         payTypeSelect: {'1': "微信", '2': "支付宝", '3': "POS机", '4': '现金'},
         rentStatusMap:{'0':'待交租','1':'已交租','2':'违约'},
+        contractStatusMap:[{'key': '执行中', 'value': '1'}, {'key': '到期退房', 'value': '2'}, {'key': '违约退房','value': '3'}, {'key': '提前退房', 'value': '4'}],
+        handelStatusMap:[{'key': '新签', 'value': '1'}, {'key': '换房', 'value': '2'}, {'key': '续租','value': '3'}, {'key': '员工', 'value': '4'}],
         collapseItem: ['1'],
         showEnter:false,
         enterResult: {'room': {}, 'contract': {}, 'customers': []}

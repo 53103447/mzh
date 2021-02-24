@@ -21,10 +21,12 @@
     <el-tabs v-model="activeName" @tab-click="tabChange">
       <el-tab-pane v-for="item in roomFloor" :key="item" :label="item+'楼'" :name="item">
         <h5 v-if="room==null || room.length<1">当前暂无数据</h5>
-        <el-button v-for="roomItem in room" :key="roomItem.id" :type="roomItem.showCss"
-                   :icon="roomItem.status == '6'?'el-icon-check':roomItem.status == '2'?'el-icon-circle-check':''"
-                   @click="toDetail(roomItem)">{{roomItem.roomNum}}
-        </el-button>
+        <div>
+          <el-button v-for="roomItem in room" :key="roomItem.id" :type="roomItem.showCss"
+                     :icon="roomItem.status == '6'?'el-icon-check':roomItem.status == '2'?'el-icon-circle-check':''"
+                     @click="toDetail(roomItem)" style="margin:10px">{{roomItem.roomNum}}
+          </el-button>
+        </div>
       </el-tab-pane>
     </el-tabs>
     <el-divider></el-divider>
@@ -305,25 +307,28 @@
         roomFloor: [],
         room: [],
         vacantRoom: [],
-        roomForm:{},
-        reserveForm:{},
+        roomForm: {},
+        reserveForm: {},
         roomStatusArr: [],
-        searchParam:{},
-        showEnter:false,
+        searchParam: {},
+        showEnter: false,
         showVacant: false,
         showReserve: false,
         showStaff: false,
-        showReserveInfo:false,
+        showReserveInfo: false,
         reserveMobile: '',
         checkInStaff: [],
-        reserve:{},
+        reserve: {},
         collapseItem: ['1'],
         staffCheckIn: [],
         staffCheckInDate: [],
         enterResult: {'room': {}, 'contract': {}, 'customers': []},
         payTypeSelect: {'1': "微信", '2': "支付宝", '3': "POS机", '4': '现金'},
-        payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {'key': 'POS机','value': '3'}, {'key': '现金', 'value': '4'}],
-        rentStatusMap:{'0':'待交租','1':'已交租','2':'违约'},
+        payTypeMap: [{'key': '微信', 'value': '1'}, {'key': '支付宝', 'value': '2'}, {
+          'key': 'POS机',
+          'value': '3'
+        }, {'key': '现金', 'value': '4'}],
+        rentStatusMap: {'0': '待交租', '1': '已交租', '2': '违约'},
         pickerDisableOptions: {
           disabledDate(time) {
             const tomorrow = Date.now()
@@ -360,7 +365,7 @@
       queryRoomFloor() {
         this.$http.post(pixUrl + '/room/queryRoomFloor', {}).then(function (res) {
           const result = res.body;
-          if(result.ok){
+          if (result.ok) {
             this.roomFloor = result.result
           }
         }, function () {
@@ -370,7 +375,7 @@
       queryRoomByFloor() {
         this.$http.post(pixUrl + '/room/queryRoomByFloor', {'floor': this.activeName}).then(function (res) {
           const result = res.body;
-          if(result.ok){
+          if (result.ok) {
             this.room = result.result
           }
         }, function () {
@@ -390,7 +395,7 @@
       queryRoomStatus() {
         this.$http.post(pixUrl + '/room/queryRoomStatus', {}).then(function (res) {
           const result = res.body;
-          if(result.ok){
+          if (result.ok) {
             this.roomStatusArr = result.result
           }
         }, function () {
@@ -445,8 +450,8 @@
           console.log('by用户状态请求失败');
         });
       },
-      updateRoomStatus(roomId){
-        this.$http.post(pixUrl + '/room/updateRoomStatus', {'id':roomId ,'status':'1'}).then(function (res) {
+      updateRoomStatus(roomId) {
+        this.$http.post(pixUrl + '/room/updateRoomStatus', {'id': roomId, 'status': '1'}).then(function (res) {
           const result = res.body;
           if (result.ok) {
             this.$message({
@@ -455,7 +460,7 @@
               duration: 1000,
               onClose: () => {
                 this.showStaff = false;
-                this.showVacant=false;
+                this.showVacant = false;
                 this.roomStatusChange();
               }
             });
@@ -527,8 +532,11 @@
           console.log('by手机号预定信息');
         });
       },
-      staffCheckOut(){
-        this.$http.post(pixUrl + '/integration/staffCheckOut', {'roomId': this.roomForm.roomId,'contractId': this.roomForm.contractId}).then(function (res) {
+      staffCheckOut() {
+        this.$http.post(pixUrl + '/integration/staffCheckOut', {
+          'roomId': this.roomForm.roomId,
+          'contractId': this.roomForm.contractId
+        }).then(function (res) {
           const result = res.body;
           if (result.ok) {
             this.$notify({
@@ -563,7 +571,7 @@
         } else if ("2" === roomItem.status) {
           this.queryRoomInfo(roomItem.id)
           this.showEnter = true
-        }else if("3" === roomItem.status){
+        } else if ("3" === roomItem.status) {
           this.$confirm('确认该房间已打扫，更新为空房吗?', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
