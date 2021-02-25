@@ -419,7 +419,7 @@
       },
       forwardChange(){
         if(this.roomForm.isForward){
-          this.$http.post(pixUrl + '/settlement/selectSettlementByStatus', {}).then(function (res) {
+          this.$http.post(pixUrl + '/settlement/selectSettlementByStatus', {'status':'0','refundPayType':'4'}).then(function (res) {
             const result = res.body;
             if (result.ok) {
               this.forwardList = result.result
