@@ -86,7 +86,8 @@
           <el-col :span="14">
             <h2>退款单详情</h2>
           </el-col>
-          <el-col :span="10" :offset="20">
+          <el-col :span="10" :offset="16">
+            <el-button type="primary">打 印</el-button>
             <el-button type="primary" @click="showDialog = false">关 闭</el-button>
           </el-col>
         </el-row>
@@ -192,8 +193,12 @@
             {{refundStatus[refundEntity.status]}}
           </el-col>
         </el-row>
+        <el-divider></el-divider>
+        <el-table :data="refundDetailArr" border show-summary style="width: 100%">
+          <el-table-column prop="subject" label="收费科目"></el-table-column>
+          <el-table-column prop="price" label="金额"></el-table-column>
+        </el-table>
       </el-card>
-
     </el-dialog>
   </div>
 </template>
@@ -217,6 +222,7 @@
         refundStatusArr: [{'key': '待退款', 'value': '0'},{'key': '已退款', 'value': '1'}],
         showDialog:false,
         refundEntity:{},
+        refundDetailArr:[]
       }
     },
     methods:{
@@ -244,7 +250,8 @@
           const result = res.body;
           if(result.ok){
             this.refundEntity = result.result
-            this.showDialog = true;
+            this.showDialog = true
+            this.refundDetailArr = JSON.parse(this.refundEntity.refundDetail)
           }
         }, function () {
           console.log('查询缴费列表抵账！');
