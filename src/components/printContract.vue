@@ -1,6 +1,6 @@
 <template>
   <div style="text-align:center;" class="rotation">
-    <table id="table" border="1" cellspacing="10" cellpadding="10"  style="width:100%;margin-top:-120px;margin-left:80px;">
+    <table id="table" border="1" style="width:100%;margin-top:-120px;margin-left:80px;">
       <tr>
         <td colspan="3" style="text-align: left">V领地上海浦东川沙社区 8101 房</td>
         <td colspan="2" style="text-align: left">使用时间    2020年8月29日  ~  2021年2月27日</td>
@@ -43,8 +43,8 @@
         <td>1</td>
       </tr>
       <tr>
-        <td colspan="3" style="text-align: left">紧急联系人姓名      王卫成	</td>
-        <td colspan="2" style="text-align: left">紧急联系人电话      18020791837</td>
+        <td colspan="3"><div style="float:left; width:100%;text-align:left;margin-left:25px"><span style="font-weight:bold">紧急联系人姓名</span> &nbsp;&nbsp;&nbsp;&nbsp; 王卫成 </div></td>
+        <td colspan="2"><div style="float:left; width:100%;text-align:left;margin-left:25px"><span style="font-weight:bold">紧急联系人电话</span> &nbsp;&nbsp;&nbsp;&nbsp; 18020791837 </div></td>
       </tr>
     </table>
   </div>
