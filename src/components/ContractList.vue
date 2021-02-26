@@ -192,7 +192,14 @@
         <el-collapse v-model="collapseItem">
           <el-collapse-item name="1">
             <template slot="title">
-              <h3>居住人详情</h3>
+              <el-row type="flex" class="row-bg" justify="center" align="middle" style="width:98%">
+                <el-col :span="12">
+                  <h3>居住人详情</h3>
+                </el-col>
+                <el-col :span="12" style="text-align: right">
+                  <el-button icon="el-icon-plus" type="primary" size="mini" circle @click.stop="customerDialog=true"></el-button>
+                </el-col>
+              </el-row>
             </template>
             <el-table :data="enterResult.customers" border style="width: 100%">
               <el-table-column label="客户类型">
@@ -225,6 +232,42 @@
           </el-collapse-item>
         </el-collapse>
       </el-card>
+
+      <el-dialog width="30%" title="添加同住人" :visible.sync="customerDialog" append-to-body>
+        <el-form :model="customerForm" :rules="rules" ref="customerForm" label-position="right" label-width="120px">
+          <el-form-item label="同住人姓名" prop="customerName">
+            <el-input v-model="customerForm.customerName" placeholder="同住人姓名" style="width: 217px"></el-input>
+          </el-form-item>
+          <el-form-item label="证件号" prop="cardNo">
+            <el-input v-model="customerForm.cardNo" placeholder="证件号" maxlength="18" style="width: 217px"></el-input>
+          </el-form-item>
+          <el-form-item label="证件有效期" prop="cardEffective">
+            <el-date-picker
+                    v-model="customerForm.cardEffective"
+                    type="date"
+                    :picker-options="pickerDisableOptions"
+                    placeholder="选择日期">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="性别" prop="sex">
+            <el-radio v-model="customerForm.sex" label="M">男</el-radio>
+            <el-radio v-model="customerForm.sex" label="F">女</el-radio>
+          </el-form-item>
+          <el-form-item label="手机号" prop="mobilePhone">
+            <el-input v-model="customerForm.mobilePhone" maxlength="11" placeholder="手机号"
+                      style="width: 217px"></el-input>
+          </el-form-item>
+          <el-form-item label="户籍地址" prop="permanentAddress">
+            <el-input v-model="customerForm.permanentAddress" type="textarea" :rows="3"
+                      placeholder="户籍地址" style="width: 217px"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="customerDialog=false">取 消</el-button>
+          <el-button type="primary" @click="saveCustomer">确 定</el-button>
+        </span>
+      </el-dialog>
+
     </el-dialog>
   </div>
 </template>
@@ -234,7 +277,7 @@
   export default {
     name: "ContractList",
     created() {
-      this.queryContractInfo()
+      this.queryContractList()
     },
     data() {
       return {
@@ -248,11 +291,72 @@
         handelStatusMap:[{'key': '新签', 'value': '1'}, {'key': '换房', 'value': '2'}, {'key': '续租','value': '3'}, {'key': '员工', 'value': '4'}],
         collapseItem: ['1'],
         showEnter:false,
-        enterResult: {'room': {}, 'contract': {}, 'customers': []}
+        enterResult: {'room': {}, 'contract': {}, 'customers': []},
+        customerDialog:false,
+        pickerDisableOptions: {
+          disabledDate(time) {
+            const tomorrow = Date.now()
+            return time.getTime() < tomorrow;
+          },
+        },
+        customerForm:{},
+        rules: {
+          customerName: [
+            {required: true, message: '请输入租房姓名', trigger: 'blur'},
+          ],
+          cardType: [
+            {required: true, message: '请选择证件类型', trigger: 'change'}
+          ],
+          cardNo: [
+            {required: true, message: '请输入证件号', trigger: 'blur'},
+            {pattern: '^[1-9]\\d{5}(18|19|20|(3\\d))\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$', message: '身份证号格式不正确', trigger: 'blur'},
+          ],
+          cardEffective: [
+            {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
+          ],
+          sex: [
+            {required: true, message: '请选择性别', trigger: 'change'},
+          ],
+          mobilePhone: [
+            {required: true, message: '请输入手机号', trigger: 'blur'},
+            {pattern: '^1[0-9]{10}$', message: '手机号格式不正确', trigger: 'blur'},
+          ],
+          permanentAddress: [
+            {required: true, message: '请输入户籍地址', trigger: 'blur'},
+          ],
+        }
       }
     },
     methods:{
-      queryContractInfo(){
+      saveCustomer(){
+        this.$refs['customerForm'].validate((valid) => {
+          if (valid) {
+            this.customerForm.contractId = this.enterResult.contract.id;
+            this.$http.post(pixUrl + '/customer/addCohabitant', this.customerForm).then(function (res) {
+              const result = res.body;
+              if (result.ok) {
+                this.$notify({
+                  title: '提醒',
+                  message: result.message,
+                  type: 'success',
+                  duration: 1500,
+                  offset: 100,
+                  onClose: () => {
+                    this.queryContractInfo(this.enterResult.contract.id)
+                    this.customerDialog=false
+                  }
+                });
+              }
+            }, function () {
+              console.log('保存信息失败');
+            });
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        })
+      },
+      queryContractList(){
         this.$http.post(pixUrl + '/contract/queryContractList', this.searchParam).then(function (res) {
           const result = res.body;
           if(result.ok){
@@ -261,6 +365,15 @@
           }
         }, function () {
           console.log('查询缴费列表失败！');
+        });
+      },
+      queryContractInfo(contractId){
+        this.$http.post(pixUrl + '/integration/queryContractInfo', {'contractId': contractId}).then(function (res) {
+          if (res.body.ok) {
+            this.enterResult = res.body.result
+          }
+        }, function () {
+          console.log('by手机号预定信息');
         });
       },
       pageSizeChange(val){
@@ -272,14 +385,8 @@
         this.queryContractInfo()
       },
       toDetail(contractId){
-        this.$http.post(pixUrl + '/integration/queryContractInfo', {'contractId': contractId}).then(function (res) {
-          if (res.body.ok) {
-            this.enterResult = res.body.result
-            this.showEnter = true
-          }
-        }, function () {
-          console.log('by手机号预定信息');
-        });
+        this.queryContractInfo(contractId);
+        this.showEnter = true
       }
     },
     filters: {

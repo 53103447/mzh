@@ -7,7 +7,7 @@
 <script>
 // import HelloWorld from './components/RoomState.vue'
 // import HelloWorld from './components/RentList.vue'
-import HelloWorld from './components/printContract'
+import HelloWorld from './components/RoomState'
 
 export default {
   name: 'app',
