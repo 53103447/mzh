@@ -51,7 +51,7 @@
         </el-col>
       </el-row>
       <!-- 房间预订 -->
-      <el-dialog title="房间预订" :visible.sync="showReserve" :show-close="false" width="30%" append-to-body>
+      <el-dialog title="房间预订" :visible.sync="showReserve1" :show-close="false" width="30%" append-to-body>
         <el-form ref="reserveForm" :model="reserveForm" :rules="rules" label-width="110px">
           <el-form-item label="房间号">
             {{reserveForm.roomNum}}
@@ -88,7 +88,7 @@
         </span>
       </el-dialog>
 
-      <el-dialog title="员工入住" :visible.sync="showStaff" width="50%" :show-close="false" append-to-body>
+      <el-dialog title="员工入住" :visible.sync="showStaff1" width="50%" :show-close="false" append-to-body>
         <div>房间号：{{this.roomForm.roomNum}}</div>
         <br/>
         <el-transfer v-model="staffCheckIn" :data="staffCheckInDate" :titles="['未入住员工', '已入住员工']"></el-transfer>
@@ -288,6 +288,111 @@
       </div>
     </el-dialog>
 
+    <el-dialog :visible.sync="roomDialog" width="60%">
+      <div slot="title">
+        <el-row type="flex" class="row-bg" justify="center" align="middle">
+          <el-col :span="12">
+            <h2>房间信息</h2>
+          </el-col>
+          <el-col :span="12" :offset="roomInfo.room.status!='1'?18:14">
+            <el-button type="warning" @click="showReserve = true" v-if="roomInfo.room.status==='1'">预订</el-button>
+            <el-button type="info" @click="showStaff = true;queryUserByStatus()" v-if="roomInfo.room.status==='1'">员工入住</el-button>
+            <el-popconfirm title="确认该房间已打扫吗？" @confirm="updateRoomStatus" v-if="roomInfo.room.status==='3'">
+              <el-button slot="reference" type="primary">已打扫</el-button>
+            </el-popconfirm>
+          </el-col>
+        </el-row>
+      </div>
+      <el-card class="box-card">
+        <div slot="header" class="clearfix">
+          <span>房间信息</span>
+        </div>
+        <el-row style="font-size: 16px">
+          <el-col :span="6">房间号：123123{{roomInfo.room.roomNum}}</el-col>
+          <el-col :span="6">户型：123{{roomInfo.room.style}}</el-col>
+          <el-col :span="6">价格：123{{roomInfo.room.price}}</el-col>
+          <el-col :span="6">楼层：123{{roomInfo.room.floor}}</el-col>
+        </el-row><br/>
+        <el-table :data="roomInfo.room.facilitiesArr" align="center" border style="width: 100%" size="small">
+          <el-table-column prop="name" label="设备名称"></el-table-column>
+          <el-table-column prop="price" label="设备价值"></el-table-column>
+        </el-table>
+      </el-card><br/>
+      <el-card class="box-card" v-if="!isEmpty(roomInfo.customers)">
+        <div slot="header" class="clearfix">
+          <span>居住人信息</span>
+        </div>
+        <el-table :data="roomInfo.customers" border style="width: 100%">
+          <el-table-column label="客户类型">
+            <template slot-scope="scope">
+              {{scope.$index==0?'签约人':'同住人' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" label="客户姓名"></el-table-column>
+          <el-table-column prop="mobilePhone" label="手机号"></el-table-column>
+          <el-table-column prop="urgentPeople" label="紧急联系人"></el-table-column>
+          <el-table-column prop="urgentPhone" label="联系人手机"></el-table-column>
+          <el-table-column prop="permanentAddress" label="户籍地址" width="200"></el-table-column>
+        </el-table>
+      </el-card>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="roomDialog = false">关 闭</el-button>
+      </span>
+
+      <!-- 房间预订 -->
+      <el-dialog title="房间预订" :visible.sync="showReserve" :show-close="false" width="30%" append-to-body>
+        <el-form ref="reserveForm" :model="reserveForm" :rules="rules" label-width="110px">
+          <el-form-item label="房间号">
+            {{reserveForm.roomNum}}
+          </el-form-item>
+          <el-form-item label="预订手机号" prop="reserveMobile">
+            <el-input v-model="reserveForm.reserveMobile" placeholder="预订手机号" maxlength="11"
+                      style="width: 217px"></el-input>
+          </el-form-item>
+          <el-form-item label="订金金额" prop="reservePrice">
+            <el-input v-model="reserveForm.reservePrice" placeholder="订金金额" maxlength="4"
+                      style="width: 217px"></el-input>
+          </el-form-item>
+          <el-form-item label="订金有效期" prop="effectiveTime">
+            <el-date-picker
+                    v-model="reserveForm.effectiveTime"
+                    type="date"
+                    :picker-options="pickerDisableOptions"
+                    placeholder="选择日期">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="支付方式" prop="payType">
+            <el-select v-model="reserveForm.payType" clearable placeholder="支付方式">
+              <el-option v-for="item in payTypeMap" :key="item.id" :label="item.key"
+                         :value="item.value"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="备注">
+            <el-input v-model="reserveForm.remark" placeholder="备注" style="width: 217px"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="showReserve = false;showVacant=false">取 消</el-button>
+          <el-button type="primary" @click="saveReserve">确 定</el-button>
+        </span>
+      </el-dialog>
+
+      <el-dialog title="员工入住" :visible.sync="showStaff" width="50%" :show-close="false" append-to-body>
+        <div>房间号：{{this.roomForm.roomNum}}</div>
+        <br/>
+        <el-transfer v-model="staffCheckIn" :data="staffCheckInDate" :titles="['未入住员工', '已入住员工']"></el-transfer>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="danger" @click="staffCheckOut" v-if="!isEmpty(roomForm.contractId)">退 房</el-button>
+          <el-button @click="showStaff = false;showVacant=false">取 消</el-button>
+          <el-button type="primary" @click="saveStaffCheckIn">确 定</el-button>
+        </span>
+      </el-dialog>
+
+
+
+    </el-dialog>
+
   </div>
 </template>
 
@@ -346,7 +451,9 @@
           effectiveTime: [
             {type: 'date', required: true, message: '请选择日期', trigger: 'change'}
           ]
-        }
+        },
+        roomDialog:false,
+        roomInfo:{'room':{}}
       }
     },
     filters: {
@@ -555,7 +662,15 @@
         });
       },
       toDetail(roomItem) {
-        this.reserve = {};
+        this.$http.post(pixUrl + '/room/selectRoomById', {'id': roomItem.id}).then(function (res) {
+          if(res.body.ok){
+            this.roomInfo = res.body.result
+            this.roomDialog = true
+          }
+        }, function () {
+          console.log('by手机号预定信息');
+        });
+        /*this.reserve = {};
         this.roomForm.reserveId = null;
         this.staffCheckIn = [];
         if ("1" === roomItem.status) {
@@ -590,7 +705,7 @@
         } else if ("6" === roomItem.status) {
           this.queryReserve(roomItem.id)
           this.showReserveInfo = true;
-        }
+        }*/
       },
       staffCheckInDataMethod() {
         let result = []
