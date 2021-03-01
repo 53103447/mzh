@@ -33,7 +33,7 @@
           {{scope.row.contractEnd | formatDate}}
         </template>
       </el-table-column>
-      <el-table-column prop="currentDateRange" label="当前缴费覆盖日期" width="180px"></el-table-column>
+      <el-table-column prop="currentDateRange" label="当前缴费覆盖日期"></el-table-column>
       <el-table-column prop="surplusDay" label="剩余天数"></el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">

@@ -384,6 +384,14 @@
         this.searchParam.pageNo = val
         this.queryContractInfo()
       },
+      inputTimeOut(){
+        if (this.timer) {
+          clearTimeout(this.timer)
+        }
+        this.timer = setTimeout(() => {
+          this.queryContractList();
+        }, 500)
+      },
       toDetail(contractId){
         this.queryContractInfo(contractId);
         this.showEnter = true
