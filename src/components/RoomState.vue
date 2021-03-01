@@ -24,7 +24,7 @@
         <div>
           <el-button v-for="roomItem in room" :key="roomItem.id" :type="roomItem.showCss"
                      :icon="roomItem.status == '6'?'el-icon-check':roomItem.status == '2'?'el-icon-circle-check':''"
-                     @click="toDetail(roomItem)" style="margin:10px">{{roomItem.roomNum}}
+                     @click="toDetail(roomItem)" style="margin:10px">{{roomItem.roomNum}}{{roomItem.style}}
           </el-button>
         </div>
       </el-tab-pane>
@@ -40,254 +40,6 @@
         <el-button size="mini" type="primary" icon="el-icon-check">已预定</el-button>
       </el-col>
     </el-row>
-
-    <el-dialog title="空房" :visible.sync="showVacant" width="30%">
-      <el-row>
-        <el-col :span="6">
-          <el-button type="warning" @click="showReserve = true">预订</el-button>
-        </el-col>
-        <el-col :span="18">
-          <el-button type="info" @click="showStaff = true;queryUserByStatus()">员工入住</el-button>
-        </el-col>
-      </el-row>
-      <!-- 房间预订 -->
-      <el-dialog title="房间预订" :visible.sync="showReserve1" :show-close="false" width="30%" append-to-body>
-        <el-form ref="reserveForm" :model="reserveForm" :rules="rules" label-width="110px">
-          <el-form-item label="房间号">
-            {{reserveForm.roomNum}}
-          </el-form-item>
-          <el-form-item label="预订手机号" prop="reserveMobile">
-            <el-input v-model="reserveForm.reserveMobile" placeholder="预订手机号" maxlength="11"
-                      style="width: 217px"></el-input>
-          </el-form-item>
-          <el-form-item label="订金金额" prop="reservePrice">
-            <el-input v-model="reserveForm.reservePrice" placeholder="订金金额" maxlength="4"
-                      style="width: 217px"></el-input>
-          </el-form-item>
-          <el-form-item label="订金有效期" prop="effectiveTime">
-            <el-date-picker
-                    v-model="reserveForm.effectiveTime"
-                    type="date"
-                    :picker-options="pickerDisableOptions"
-                    placeholder="选择日期">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="支付方式" prop="payType">
-            <el-select v-model="reserveForm.payType" clearable placeholder="支付方式">
-              <el-option v-for="item in payTypeMap" :key="item.id" :label="item.key"
-                         :value="item.value"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="备注">
-            <el-input v-model="reserveForm.remark" placeholder="备注" style="width: 217px"></el-input>
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="showReserve = false;showVacant=false">取 消</el-button>
-          <el-button type="primary" @click="saveReserve">确 定</el-button>
-        </span>
-      </el-dialog>
-
-      <el-dialog title="员工入住" :visible.sync="showStaff1" width="50%" :show-close="false" append-to-body>
-        <div>房间号：{{this.roomForm.roomNum}}</div>
-        <br/>
-        <el-transfer v-model="staffCheckIn" :data="staffCheckInDate" :titles="['未入住员工', '已入住员工']"></el-transfer>
-        <span slot="footer" class="dialog-footer">
-          <el-button type="danger" @click="staffCheckOut" v-if="!isEmpty(roomForm.contractId)">退 房</el-button>
-          <el-button @click="showStaff = false;showVacant=false">取 消</el-button>
-          <el-button type="primary" @click="saveStaffCheckIn">确 定</el-button>
-        </span>
-      </el-dialog>
-
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="showVacant = false;showVacant=false">取 消</el-button>
-      </span>
-    </el-dialog>
-
-    <!-- 已入住 -->
-    <el-dialog :visible.sync="showEnter" :show-close="false" width="80%" top="10px">
-      <div slot="title">
-        <el-row type="flex" class="row-bg" justify="center" align="middle">
-          <el-col :span="12">
-            <h2>已入住</h2>
-          </el-col>
-          <el-col :span="12" :offset="16">
-            <el-button type="danger" @click="checkOut(enterResult)">退 房</el-button>
-            <el-button type="primary" @click="showEnter = false">关 闭</el-button>
-          </el-col>
-        </el-row>
-      </div>
-      <el-card class="box-card">
-        <div slot="header" class="clearfix">
-          <span style="font-size: 18px;font-weight: 700">房间信息</span>
-        </div>
-        <el-row>
-          <el-col :span="6">
-            社区：{{enterResult.room.store}}
-          </el-col>
-          <el-col :span="18">
-            房间号：{{enterResult.room.roomNum}}
-          </el-col>
-        </el-row>
-      </el-card>
-      <br/>
-      <el-card class="box-card">
-        <div slot="header" class="clearfix">
-          <span style="font-size: 18px;font-weight: 700">合同信息</span>
-        </div>
-        <el-row>
-          <el-col :span="6">
-            签约人：{{enterResult.contract.customerName}}
-          </el-col>
-          <el-col :span="6">
-            联系电话：{{enterResult.contract.customerMobile}}
-          </el-col>
-          <el-col :span="12">
-            销售员：{{enterResult.contract.saleName}}
-          </el-col>
-        </el-row>
-        <br/>
-        <el-row>
-          <el-col :span="6">
-            合同开始时间：{{enterResult.contract.contractStart | formatDate}}
-          </el-col>
-          <el-col :span="6">
-            合同结束时间：{{enterResult.contract.contractEnd | formatDate}}
-          </el-col>
-          <el-col :span="12">
-            合同期限：{{enterResult.contract.contractMonthNum}}个月
-          </el-col>
-        </el-row>
-        <br/>
-        <el-row>
-          <el-col :span="6">
-            房间价格：{{enterResult.contract.realPrice}}元
-          </el-col>
-          <el-col :span="6">
-            押金：{{enterResult.contract.deposit}}元
-          </el-col>
-          <el-col :span="12">
-            支付方式：{{payTypeSelect[enterResult.contract.payType]}}
-          </el-col>
-        </el-row>
-        <br/>
-        <el-collapse>
-          <el-collapse-item>
-            <template slot="title">
-              <h3>交租单详情</h3>
-            </template>
-            <el-table :data="enterResult.rents" border style="width: 100%">
-              <el-table-column prop="contractNo" label="合同号" width="200"></el-table-column>
-              <el-table-column prop="customerName" label="客户姓名" width="120"></el-table-column>
-              <el-table-column prop="currentDateRange" label="租金覆盖范围" width="230"></el-table-column>
-              <el-table-column prop="rentPrice" label="租金金额" width="120"></el-table-column>
-              <el-table-column prop="waterNum" label="水表度数" width="120"></el-table-column>
-              <el-table-column prop="waterPrice" label="水费" width="120"></el-table-column>
-              <el-table-column prop="totalFee" label="交租单总计" width="120"></el-table-column>
-              <el-table-column label="支付方式" width="100">
-                <template slot-scope="scope">
-                  {{payTypeSelect[scope.row.payType]}}
-                </template>
-              </el-table-column>
-              <el-table-column label="状态">
-                <template slot-scope="scope">
-                  <el-button
-                          :type="scope.row.status=='0'?'danger':scope.row.status=='1'?'success':'warning'"
-                          plain disabled>{{rentStatusMap[scope.row.status]}}
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-collapse-item>
-        </el-collapse>
-      </el-card>
-      <br/>
-      <el-card class="box-card">
-        <el-collapse v-model="collapseItem">
-          <el-collapse-item name="1">
-            <template slot="title">
-              <h3>居住人详情</h3>
-            </template>
-            <el-table :data="enterResult.customers" border style="width: 100%">
-              <el-table-column label="客户类型">
-                <template slot-scope="scope">
-                  {{scope.$index==0?'签约人':'同住人' }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="name" label="客户姓名"></el-table-column>
-              <el-table-column label="性别">
-                <template slot-scope="scope">
-                  {{scope.row.sex=='M'?'男':'女' }}
-                </template>
-              </el-table-column>
-              <el-table-column label="证件类型">
-                <template slot-scope="scope">
-                  {{scope.row.cardType=='1'?'身份证':'其他' }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="cardNo" label="证件号码" width="200"></el-table-column>
-              <el-table-column label="证件有效期">
-                <template slot-scope="scope">
-                  {{scope.row.cardEffective | formatDate }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="mobilePhone" label="手机号"></el-table-column>
-              <el-table-column prop="urgentPeople" label="紧急联系人"></el-table-column>
-              <el-table-column prop="urgentPhone" label="联系人手机"></el-table-column>
-              <el-table-column prop="permanentAddress" label="户籍地址" width="200"></el-table-column>
-            </el-table>
-          </el-collapse-item>
-        </el-collapse>
-      </el-card>
-    </el-dialog>
-
-    <!-- 预约信息 -->
-    <el-dialog :visible.sync="showReserveInfo" :show-close="false" width="50%">
-      <div slot="title">
-        <el-row type="flex" class="row-bg" justify="center" align="middle">
-          <el-col :span="12">
-            <h2>预订信息</h2>
-          </el-col>
-          <el-col :span="12" :offset="12">
-            <el-button type="danger">入住</el-button>
-            <el-button type="primary" @click="showEnter = false">关 闭</el-button>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="8">
-            社区：{{reserve.store}}
-          </el-col>
-          <el-col :span="8">
-            房间号：{{reserve.roomNum}}
-          </el-col>
-          <el-col :span="8">
-            预订手机号：{{reserve.reserveMobile}}
-          </el-col>
-        </el-row>
-        <br/>
-        <el-row>
-          <el-col :span="8">
-            订金金额：{{reserve.reservePrice}}
-          </el-col>
-          <el-col :span="8">
-            订金有效期：{{reserve.effectiveTime | formatDate}}
-          </el-col>
-          <el-col :span="8">
-            支付方式：{{payTypeSelect[reserve.payType]}}
-          </el-col>
-        </el-row>
-        <br/>
-        <el-row>
-          <el-col :span="8">
-            预订日期：{{reserve.created | formatDate}}
-          </el-col>
-          <el-col :span="8">
-            预订单状态：{{reserve.status === '0'?'可用':'不可用'}}
-          </el-col>
-        </el-row>
-      </div>
-    </el-dialog>
-
     <el-dialog :visible.sync="roomDialog" width="60%">
       <div slot="title">
         <el-row type="flex" class="row-bg" justify="center" align="middle">
@@ -300,6 +52,9 @@
             <el-popconfirm title="确认该房间已打扫吗？" @confirm="updateRoomStatus" v-if="roomInfo.room.status==='3'">
               <el-button slot="reference" type="primary">已打扫</el-button>
             </el-popconfirm>
+            <el-popconfirm title="确认该房间已打扫吗？" @confirm="staffCheckOut" v-if="roomInfo.room.status==='5'">
+              <el-button type="danger">员工退房</el-button>
+            </el-popconfirm>
           </el-col>
         </el-row>
       </div>
@@ -308,10 +63,10 @@
           <span>房间信息</span>
         </div>
         <el-row style="font-size: 16px">
-          <el-col :span="6">房间号：123123{{roomInfo.room.roomNum}}</el-col>
-          <el-col :span="6">户型：123{{roomInfo.room.style}}</el-col>
-          <el-col :span="6">价格：123{{roomInfo.room.price}}</el-col>
-          <el-col :span="6">楼层：123{{roomInfo.room.floor}}</el-col>
+          <el-col :span="6">房间号：{{roomInfo.room.roomNum}}</el-col>
+          <el-col :span="6">户型：{{roomInfo.room.style}}<el-input v-model="roomStyle" placeholder="请输入内容"></el-input><el-button size="mini" @click="saveRoomStyle">保存</el-button></el-col>
+          <el-col :span="6">价格：{{roomInfo.room.price}}元</el-col>
+          <el-col :span="6">水表数：{{roomInfo.room.waterNum}}吨</el-col>
         </el-row><br/>
         <el-table :data="roomInfo.room.facilitiesArr" align="center" border style="width: 100%" size="small">
           <el-table-column prop="name" label="设备名称"></el-table-column>
@@ -408,6 +163,7 @@
     },
     data: function () {
       return {
+        roomStyle:'',
         activeName: "1",
         roomFloor: [],
         room: [],
@@ -469,6 +225,24 @@
       }
     },
     methods: {
+      saveRoomStyle(){
+        this.$http.post(pixUrl + '/room/updateRoomStyle', {'id':this.roomInfo.room.id,'style':this.roomStyle}).then(function (res) {
+          const result = res.body;
+          if (result.ok) {
+            this.$notify({
+              title: '提醒',
+              message: result.message,
+              type: 'success',
+              duration: 500,
+              offset: 100,
+              onClose: () => {
+                this.roomDialog=false
+                this.queryRoomByFloor()
+              }
+            });
+          }
+        })
+      },
       queryRoomFloor() {
         this.$http.post(pixUrl + '/room/queryRoomFloor', {}).then(function (res) {
           const result = res.body;
