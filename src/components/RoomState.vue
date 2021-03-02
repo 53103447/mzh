@@ -64,14 +64,27 @@
         </div>
         <el-row style="font-size: 16px">
           <el-col :span="6">房间号：{{roomInfo.room.roomNum}}</el-col>
-          <el-col :span="6">户型：{{roomInfo.room.style}}<el-input v-model="roomStyle" placeholder="请输入内容"></el-input><el-button size="mini" @click="saveRoomStyle">保存</el-button></el-col>
+          <el-col :span="6">户型：{{roomInfo.room.style}}</el-col>
           <el-col :span="6">价格：{{roomInfo.room.price}}元</el-col>
           <el-col :span="6">水表数：{{roomInfo.room.waterNum}}吨</el-col>
         </el-row><br/>
-        <el-table :data="roomInfo.room.facilitiesArr" align="center" border style="width: 100%" size="small">
+        <!--<el-table :data="roomInfo.room.facilitiesArr" align="center" border style="width: 100%" size="small">
           <el-table-column prop="name" label="设备名称"></el-table-column>
           <el-table-column prop="price" label="设备价值"></el-table-column>
-        </el-table>
+        </el-table>-->
+        <el-collapse>
+          <el-collapse-item name="1">
+            <template slot="title">
+              <i class="el-icon-office-building" style="font-size: 20px"></i>&nbsp;<span>房间设备</span>
+            </template>
+            <el-row style="font-size: 16px;font-weight: 600;">
+              <el-col :span="6" style="padding:5px;border: 1px solid #d8dade">设备</el-col>
+              <el-col :span="6" style="padding:5px;border: 1px solid #d8dade">价格</el-col>
+              <el-col :span="6" style="padding:5px;border: 1px solid #d8dade">设备</el-col>
+              <el-col :span="6" style="padding:5px;border: 1px solid #d8dade">价格</el-col>
+            </el-row>
+          </el-collapse-item>
+        </el-collapse>
       </el-card><br/>
       <el-card class="box-card" v-if="!isEmpty(roomInfo.customers)">
         <div slot="header" class="clearfix">
