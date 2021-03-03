@@ -37,25 +37,29 @@
       <el-col :span="5"></el-col>
     </el-row>
     <el-divider></el-divider>
-    <el-table :data="tableData" border style="width: 100%" size="small">
+    <el-table :data="tableData" border style="width: 100%" size="small" @sort-change="sortChange">
       <el-table-column prop="roomNum" label="房间号"></el-table-column>
       <el-table-column prop="contractNo" label="合同号"></el-table-column>
       <el-table-column prop="customerName" label="租户"></el-table-column>
       <el-table-column prop="customerMobile" label="租户电话"></el-table-column>
       <el-table-column prop="realPrice" label="房价"></el-table-column>
-      <el-table-column label="合同开始日期">
+      <el-table-column prop="contractStart" label="合同开始日期" sortable="custom">
         <template slot-scope="scope">
           {{scope.row.contractStart | formatDate}}
         </template>
       </el-table-column>
-      <el-table-column label="合同结束日期">
+      <el-table-column prop="contractEnd" label="合同结束日期" sortable="custom">
         <template slot-scope="scope">
           {{scope.row.contractEnd | formatDate}}
         </template>
       </el-table-column>
-      <el-table-column prop="contractRealEnd" label="合同实际结束时间" width="180px"></el-table-column>
-      <el-table-column prop="contractMonthNum" label="合同期限"></el-table-column>
-      <el-table-column prop="realPrice" label="合同价格"></el-table-column>
+      <el-table-column prop="contractRealEnd" label="合同实际结束时间" sortable="custom" width="150px">
+        <template slot-scope="scope">
+          {{scope.row.contractRealEnd | formatDate}}
+        </template>
+      </el-table-column>
+      <el-table-column prop="contractMonthNum" label="合同期限" sortable="custom"></el-table-column>
+      <el-table-column prop="realPrice" label="合同价格" sortable="custom"></el-table-column>
       <el-table-column label="长短租类型">
         <template slot-scope="scope">
           {{scope.row.contractMonthNum>=6?'长租':'短租'}}
@@ -328,6 +332,12 @@
       }
     },
     methods:{
+      sortChange:function( param ){
+        this.searchParam.sortKey = param.prop
+        this.searchParam.sort = param.order
+        console.log(this.searchParam)
+        this.queryContractList();
+      },
       saveCustomer(){
         this.$refs['customerForm'].validate((valid) => {
           if (valid) {
