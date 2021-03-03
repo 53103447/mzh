@@ -41,6 +41,11 @@
           {{ scope.row.remark.indexOf('null')>-1?'':scope.row.remark}}
         </template>
       </el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope="scope">
+          <el-button type="primary" size="mini" @click="voidMixPay(scope.row.id)">作废</el-button>
+        </template>
+      </el-table-column>
     </el-table>
     <el-col type="flex" justify="center" align="middle" style="padding-top: 20px">
       <el-row :space="24">
@@ -132,6 +137,20 @@
         }else{
           return 'success-row'
         }
+      },
+      voidMixPay:function(mixId){
+        let thiz = this
+        this.$prompt('请输入作废理由', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+        }).then(function(param) {
+          thiz.$http.post(pixUrl + '/integration/voidMixPay', {'id':mixId,'remark':param.value}).then(function (res) {
+            const result = res.body;
+            if (result.ok) {
+              this.queryPayDetailList();
+            }
+          })
+        })
       }
     },
     filters: {

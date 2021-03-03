@@ -148,7 +148,15 @@
             押金：{{enterResult.contract.deposit}}元
           </el-col>
           <el-col :span="12">
-            支付方式：{{payTypeSelect[enterResult.contract.payType]}}
+            <div v-if="enterResult.contract.payType!='5'">
+              支付方式：{{payTypeSelect[enterResult.contract.payType]}}
+            </div>
+            <div v-if="enterResult.contract.payType === '5'">
+              <el-row>
+                <el-col :span="4">支付方式：</el-col>
+                <el-col :span="20"><div v-for="(item,index) in JSON.parse(enterResult.contract.mixPayDetail)" :key="index">{{payTypeSelect[item.payType]}}：{{item.price}}</div></el-col>
+              </el-row>
+            </div>
           </el-col>
         </el-row>
         <br/>
@@ -174,9 +182,14 @@
               <el-table-column prop="waterNum" label="水表度数" width="120"></el-table-column>
               <el-table-column prop="waterPrice" label="水费" width="120"></el-table-column>
               <el-table-column prop="totalFee" label="交租单总计" width="120"></el-table-column>
-              <el-table-column label="支付方式" width="100">
+              <el-table-column label="支付方式" width="140">
                 <template slot-scope="scope">
-                  {{payTypeSelect[scope.row.payType]}}
+                  <div v-if="scope.row.payType!='5'">
+                    {{payTypeSelect[scope.row.payType]}}
+                  </div>
+                  <div v-if="scope.row.payType === '5'">
+                    <div v-for="(item,index) in JSON.parse(scope.row.mixPayDetail)" :key="index">{{payTypeSelect[item.payType]}}：{{item.price}}</div>
+                  </div>
                 </template>
               </el-table-column>
               <el-table-column label="状态">

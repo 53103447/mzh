@@ -35,11 +35,6 @@
       </el-table-column>
       <el-table-column prop="currentDateRange" label="当前缴费覆盖日期"></el-table-column>
       <el-table-column prop="surplusDay" label="剩余天数"></el-table-column>
-      <el-table-column label="操作">
-        <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="toRentMoney(scope.row.id)">缴费</el-button>
-        </template>
-      </el-table-column>
     </el-table>
     <el-col type="flex" justify="center" align="middle" style="padding-top: 20px">
       <el-row :space="24">
