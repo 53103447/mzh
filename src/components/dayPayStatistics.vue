@@ -68,7 +68,6 @@
         const columns = param.columns;
         const data = param.data;
         const sums = [];
-        console.log(param);
         columns.forEach(function(column, index) {
           if (index === columns.length-2) {
             sums[index] = '总计（元）';
