@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import HelloWorld from './components/dayPayStatistics'
+import HelloWorld from './components/dayRefundStatistics'
 // import HelloWorld from './components/RentList.vue'
 // import HelloWorld from './components/RoomCard'
 

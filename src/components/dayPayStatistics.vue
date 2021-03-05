@@ -50,7 +50,7 @@
             <el-col :span="14">{{value}}</el-col>
           </el-row>
           <el-row type="flex" justify="center" align="middle">
-            <el-col :span="24"><el-button type="primary">确认无误，下一步</el-button></el-col>
+            <el-col :span="24"><el-button type="primary" @click="save">确认无误，下一步</el-button></el-col>
           </el-row>
         </el-card>
       </div>
@@ -83,6 +83,32 @@
           }
         }, function () {
           console.log('查询销售员失败');
+        });
+      },
+      save:function(){
+        let thiz = this
+        let resultArr = []
+        for(let key in this.tableData.roomPayDetail){
+          resultArr.push.apply(resultArr,this.tableData.roomPayDetail[key]);
+        }
+        const loading = this.$loading({lock: true,text: 'Loading',spinner: 'el-icon-loading',background: 'rgba(0, 0, 0, 0.7)'});
+        this.$http.post(pixUrl + '/payDetail/updateDayPay', resultArr).then(function (res) {
+          let result = res.body;
+          if (result.ok) {
+            thiz.$notify({
+              title: '提醒',
+              message: result.message,
+              type: 'success',
+              duration: 1500,
+              offset: 100,
+              onClose: function() {
+                loading.close();
+              }
+            });
+          }
+        }, function () {
+          console.log('保存信息失败');
+          loading.close();
         });
       },
       datePickerChange:function(){
